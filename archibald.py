@@ -24,7 +24,10 @@ import openai
 
 # Configuration OpenAI
 
+# Load environment variables
+load_dotenv()
 secret_key = os.getenv('SECRET_KEY')
+openai.api_key = secret_key
 
 # Flask setup
 
