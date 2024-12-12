@@ -1,3 +1,79 @@
+Danakin
+danaelis.
+danapengNo darkness, no season can last forever
+
+Danakin — 23/08/2024, 15:39
+C’est good ?
+Dreasy — 23/08/2024, 16:01
+Ui
+Dreasy — Today at 19:08
+tyjftuykfiyukyilrjy
+t
+yj
+tyj
+tyj
+tyj
+Danakin — Today at 19:08
+COMMENT JE TROUVE LE LIEN
+https://github.com/OTLCF/Archibald.git
+Dreasy — Today at 19:08
+tu es sur ton git ?
+oui
+Danakin — Today at 19:08
+C'est pas public c'est grave
+Dreasy — Today at 19:09
+oui je peux pas y acceder sauf si tu me met collaborator
+ou que tu me donne le login de OTLCF
+Danakin — Today at 19:09
+Gimme ton trouves pour être collab
+Dreasy — Today at 19:09
+dreassy_dev
+dreasy-dev
+un derscore ou tiret jspu
+Danakin — Today at 19:10
+C'est fait
+dreasy-dev
+Dreasy — Today at 19:12
+met moi admin du truc$
+Danakin — Today at 19:13
+Commrnt
+Dreasy — Today at 19:13
+dans les users ou collab tu me trouve et met admin
+Danakin — Today at 19:16
+Y'a pas
+Dreasy — Today at 19:17
+securtiy un  truc du style
+ou alors fous le en public
+Danakin — Today at 19:20
+C'est public
+Dreasy — Today at 19:25
+goiod*
+good
+par contret'a plein de truc a cahnger je pense
+Danakin — Today at 19:25
+Oui donnes moi les deux fichiers python et html que tu as toi
+Dreasy — Today at 19:27
+import os
+import json
+import re
+from dotenv import load_dotenv
+from dateutil.parser import parse
+from datetime import datetime
+Expand
+message.txt
+9 KB
+j'ai jamais eu le html
+Danakin — Today at 19:27
+Ok
+Dreasy — Today at 19:28
+@app.route("/chat", methods=["POST"])
+@cross_origin(origins=["https://phareducapferret.com/"], supports_credentials=True)  # Use cross_origin here
+Phare du Cap Ferret
+dj1031590-ovh
+ACCUEIL - Phare du Cap Ferret
+Le Phare du Cap Ferret, c'est le patrimoine à la pointe, classé monument historique depuis 2009, qui se visite toute l'année.
+ACCUEIL - Phare du Cap Ferret
+il manque ca dans l'autre
 import os
 import json
 import re
@@ -5,25 +81,25 @@ from dotenv import load_dotenv
 from dateutil.parser import parse
 from datetime import datetime
 from flask import Flask, request, jsonify, session
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from langdetect import detect
 from translate import Translator
 import openai
 
-# Load environment variables
+
+# Configuration OpenAIopenai.api_key = secret_ke
 load_dotenv()
 secret_key = os.getenv('SECRET_KEY')
 openai.api_key = secret_key
 
 # Flask setup
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+CORS(app)
 app.secret_key = "archi33950baldBOT"
 
-# Preprocess knowledge base
 def preprocess_knowledge(raw_knowledge):
     """
-    Transforms and preprocesses the JSON data to structure information into usable sections.
+    Transforme et prétraite les données JSON pour structurer les informations en sections exploitables.
     """
     knowledge = {
         "questions_and_responses": [],
@@ -35,44 +111,308 @@ def preprocess_knowledge(raw_knowledge):
 
     for section, items in raw_knowledge.items():
         if section == "schedule":
+            # Traiter la section des horaires
             for schedule_item in items:
                 if isinstance(schedule_item, dict):
                     knowledge["schedule"].append(schedule_item)
+                else:
+                    print(f"Unexpected item format in section '{section}': {schedule_item}")
+
         elif section == "pricing":
+            # Traiter la section des tarifs
             if isinstance(items, dict):
                 knowledge["pricing"] = items
+            else:
+                print(f"Unexpected item format in section '{section}': {items}")
+
         elif section == "general_information":
+            # Traiter la section des informations générales
             for item in items:
                 if isinstance(item, dict) and "key" in item and "value" in item:
                     knowledge["general_information"].append(item)
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
         elif section == "faq":
+            # Traiter la section FAQ
             for item in items:
                 if isinstance(item, dict) and "question" in item and ("answer" in item or "response" in item):
+                    # Support both "answer" and "response"
                     knowledge["faq"].append({
                         "question": item["question"],
                         "answer": item.get("answer", item.get("response", ""))
                     })
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
         elif section == "questions_and_responses":
+            # Traiter la section des questions-réponses (si différente de FAQ)
             for item in items:
                 if isinstance(item, dict) and "question" in item and "response" in item:
-                    knowledge["questions_and_responses"].append(item)
+                    knowledge["questions_and_responses"].append({
+                        "question": item["question"],
+                        "response": item["response"]
+                    })
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
+        else:
+            # Section inconnue
+            print(f"Unknown section '{section}', skipping.")
+
     return knowledge
 
+# Charger et prétraiter la base de connaissances
 with open('archibald_knowledge.json', 'r', encoding='utf-8') as file:
     raw_knowledge_base = json.load(file)
 
-knowledge_base = preprocess_knowledge(raw_knowledge_base)
+knowledge_base = preprocess_knowledge(raw_knowledge_base)  # Prétraitement ici
 
-# Utility functions
+# Debugging utilities
 def debug(message):
     print(f"DEBUG: {message}")
 
+# Extract date from French messages
+MONTHS_FR = {
+... (299 lines left)
+Collapse
+message.txt
+17 KB
+ca c'est le derniere en test
+Danakin — Today at 19:29
+Donc le dernier de ton serveur ?
+Dreasy — Today at 19:29
+oui
+Danakin — Today at 19:33
+J'ai changé
+Dreasy — Today at 19:43
+Att
+Dreasy — Today at 20:01
+le nom de domain il a pas changé chez vous ?
+envoie moi le lien de ta page
+Danakin — Today at 20:04
+Ah la différence api?
+Dreasy — Today at 20:04
+?
+envoie le lien de ta page de archibal la
+Danakin — Today at 20:07
+https://phareducapferret.com/4522-2/
+Phare du Cap Ferret
+dj1031590-ovh
+Groupe - Phare du Cap Ferret
+Visites de groupe au Phare du Cap Ferret : une expérience sur mesure Organisez une visite unique au Phare du Cap Ferret, spécialement adaptée aux groupes de plus de 20 personnes, qu’il s’agisse de scolaires, de séminaires ou d’autres rassemblements. Offrez à vos participants une découverte captivante de ce site emblématique du Bassin d’Arcachon....
+Groupe - Phare du Cap Ferret
+Dreasy — Today at 20:08
+ton hmtl  a pas été modifié pour tape l'url de api...
+Danakin — Today at 20:09
+Non faut que je le refasse
+J’étais occupée
+Image
+Image
+Image
+Danakin — Today at 20:10
+C'est remis
+Dreasy — Today at 20:12
+marche pas
+Danakin — Today at 20:12
+ça dit quoi les logs du python?
+Dreasy — Today at 20:12
+Dec 12 20:09:25 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:09:25] "GET /chat HTTP/1.0" 405 -
+Dec 12 20:12:07 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:07] "OPTIONS /chat HTTP/1.0" 200 -
+Dec 12 20:12:09 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:09] "POST /chat HTTP/1.0" 200 -
+Danakin — Today at 20:12
+Local host
+Dreasy — Today at 20:12
+Dec 12 20:09:25 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:09:25] "GET /chat HTTP/1.0" 405 -
+Dec 12 20:12:07 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:07] "OPTIONS /chat HTTP/1.0" 200 -
+Dec 12 20:12:09 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:09] "POST /chat HTTP/1.0" 200 -
+Dec 12 20:12:28 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:28] "OPTIONS /chat HTTP/1.0" 200 -
+Dec 12 20:12:29 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:29] "POST /chat HTTP/1.0" 200 -
+Dec 12 20:12:33 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:12:33] "POST /chat HTTP/1.0" 200 -
+Danakin — Today at 20:13
+Mais j'ai remis sur Git la config que tu avais sur ton serveur donc pourquoi localhost
+Dreasy — Today at 20:13
+les logs c'est que apres la deuxieme data
+date
+tkt
+Danakin — Today at 20:13
+Ahh mais rien d'autres du coup? Que "[12/Dec/2024 20:12:33] "POST /chat HTTP/1.0" 200 -"
+Dreasy — Today at 20:13
+oui
+genre le POST/ surtout
+Danakin — Today at 20:13
+Donc les étapes fonctionnent pas ça n'envoit pas au python
+Dreasy — Today at 20:14
+ah si
+mais il traite pas
+ou il renvoie rien
+Danakin — Today at 20:14
+Mais tu as les étapes ?
+Dreasy — Today at 20:14
+non
+Danakin — Today at 20:14
+Donc il reçoit pas du html
+Ah
+Si tu dis qu'il reçoit parce qu'il t'ajoutes une ligne okay
+Dreasy — Today at 20:15
+chaque /POST ou OPTION c'est une requte que j'ai fait avec bibibbald
+Danakin — Today at 20:16
+Oui okay, bon je me fais à manger & je regarde ça, t’as pas du coup de moyen de me renvoyer les logs du python automatiquement pour que je t’embêtes pas après toi ?
+Dreasy — Today at 20:16
+nop
+Danakin — Today at 20:16
+Sad
+Dreasy — Today at 20:18
+import le deuxieme fichier que je t'aais donné
+la  c'est le premier
+alors
+curl -vvv -X POST -H "Content-Type: application/json" -d '{"message": "combien ca coute 1 journée pour le 27 octobre 2025"}' https://api.phareducapferret.com/chat --insecure
+en faisant cette copmmande
+"response": "Ferm\u00e9 le 2025-10-27. "
+
+j'ai cette réponse
+donc le .py fonctionne
+"OPTIONS /chat HTTP/1.0" 200 -
+Dec 12 20:24:24 localhost.localdomain python3[86563]: 10.100.0.241 - - [12/Dec/2024 20:24:24] "POST /chat HTTP/1.0" 200 -
+
+ton html envoie un OPTION puis un POST
+alorsq ue juste un POST fonctionne
+Danakin — Today at 20:28
+Donc je dois changer le py avec le dernier
+& le html enlever le option?
+Dreasy — Today at 20:29
+le py je pense tu change rirn
+le html oui
+Danakin — Today at 20:29
+Oki
+Dreasy — Today at 20:29
+att j'ai l'impression que le python il appel meme plus gpt oa
+la
+il repond juste avec le truc de data
+date
+Danakin — Today at 20:30
+Ah pas bon
+Dreasy — Today at 20:30
+enfaite si va falloir modif lepython aussi
+Danakin — Today at 20:30
+Ah oui non il était pas bon du tout le python
+Dreasy — Today at 20:30
+bah tiens
+﻿
+Dreasy
+dreasyy
+Prise Rj 45 cat 7a+
+ 
+ 
+ 
+ 
+ 
+As good as it feels to pour everyone’s drink, you need to fill your own cup every now and again
+import os
+import json
+import re
+from dotenv import load_dotenv
+from dateutil.parser import parse
+from datetime import datetime
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS, cross_origin
+from langdetect import detect
+from translate import Translator
+import openai
+
+
+# Configuration OpenAIopenai.api_key = secret_ke
+load_dotenv()
+secret_key = os.getenv('SECRET_KEY')
+openai.api_key = secret_key
+
+# Flask setup
+app = Flask(__name__)
+CORS(app)
+app.secret_key = "archi33950baldBOT"
+
+def preprocess_knowledge(raw_knowledge):
+    """
+    Transforme et prétraite les données JSON pour structurer les informations en sections exploitables.
+    """
+    knowledge = {
+        "questions_and_responses": [],
+        "general_information": [],
+        "schedule": [],
+        "pricing": {},
+        "faq": []
+    }
+
+    for section, items in raw_knowledge.items():
+        if section == "schedule":
+            # Traiter la section des horaires
+            for schedule_item in items:
+                if isinstance(schedule_item, dict):
+                    knowledge["schedule"].append(schedule_item)
+                else:
+                    print(f"Unexpected item format in section '{section}': {schedule_item}")
+
+        elif section == "pricing":
+            # Traiter la section des tarifs
+            if isinstance(items, dict):
+                knowledge["pricing"] = items
+            else:
+                print(f"Unexpected item format in section '{section}': {items}")
+
+        elif section == "general_information":
+            # Traiter la section des informations générales
+            for item in items:
+                if isinstance(item, dict) and "key" in item and "value" in item:
+                    knowledge["general_information"].append(item)
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
+        elif section == "faq":
+            # Traiter la section FAQ
+            for item in items:
+                if isinstance(item, dict) and "question" in item and ("answer" in item or "response" in item):
+                    # Support both "answer" and "response"
+                    knowledge["faq"].append({
+                        "question": item["question"],
+                        "answer": item.get("answer", item.get("response", ""))
+                    })
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
+        elif section == "questions_and_responses":
+            # Traiter la section des questions-réponses (si différente de FAQ)
+            for item in items:
+                if isinstance(item, dict) and "question" in item and "response" in item:
+                    knowledge["questions_and_responses"].append({
+                        "question": item["question"],
+                        "response": item["response"]
+                    })
+                else:
+                    print(f"Unexpected item format in section '{section}': {item}")
+
+        else:
+            # Section inconnue
+            print(f"Unknown section '{section}', skipping.")
+
+    return knowledge
+
+# Charger et prétraiter la base de connaissances
+with open('archibald_knowledge.json', 'r', encoding='utf-8') as file:
+    raw_knowledge_base = json.load(file)
+
+knowledge_base = preprocess_knowledge(raw_knowledge_base)  # Prétraitement ici
+
+# Debugging utilities
+def debug(message):
+    print(f"DEBUG: {message}")
+
+# Extract date from French messages
 MONTHS_FR = {
     "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
     "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
 }
 
-def parse_date_localized(date_string):
+def parse_date_localized(date_string, locale="fr_FR"):
     try:
         date_string = date_string.strip()
         match = re.search(r"(\d{1,2})\s(\w+)\s(\d{4})", date_string, re.IGNORECASE)
@@ -82,24 +422,38 @@ def parse_date_localized(date_string):
             year = int(match.group(3))
             month = MONTHS_FR.get(month_name)
             if month:
-                return datetime(year, month, day).date()
+                parsed_date = datetime(year, month, day)
+                return parsed_date.date()
         return parse(date_string, fuzzy=True).date()
     except Exception as e:
         debug(f"Error during parsing: {e}")
         return None
 
+
 def detect_language(user_message):
+    """
+    Détecte la langue du message utilisateur, avec des règles spécifiques pour des formats attendus.
+    """
     try:
+        # Vérification de mots-clés typiques en anglais (comme les mois)
         english_months = [
             "january", "february", "march", "april", "may", "june",
             "july", "august", "september", "october", "november", "december"
         ]
         if any(month in user_message.lower() for month in english_months):
             return "en"
-        return detect(user_message)
+
+        # Utiliser la bibliothèque de détection pour les autres cas
+        lang = detect(user_message)
+        print(f"Detected language: {lang}")
+        return lang
     except Exception as e:
-        debug(f"Language detection failed: {e}")
-        return "en"
+        print(f"Language detection failed: {e}")
+        return "en"  # Fallback to English
+
+def translate_with_dictionary(text, target_language):
+    translator = Translator(to_lang=target_language)
+    return translator.translate(text)
 
 def extract_info(user_message):
     try:
@@ -107,22 +461,66 @@ def extract_info(user_message):
         date = parse_date_localized(date_match.group(1)) if date_match else None
         adults_match = re.search(r"(\d+)\sadultes?", user_message)
         adults = int(adults_match.group(1)) if adults_match else 0
-        children_matches = re.findall(r"(\d+)\s(?:enfants?|ans)", user_message)
-        children = [int(match) for match in children_matches]
+        children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
+        children = [int(match[0]) for match in children_matches]
         is_schedule = "horaire" in user_message.lower() or "ouvert" in user_message.lower()
         is_price = "tarif" in user_message.lower() or "prix" in user_message.lower()
+
+        # Détecter les questions générales
+        is_general_question = not (is_schedule or is_price or date)
+
         return {
             "date": date.isoformat() if date else None,
             "adults": adults,
             "children": children,
             "is_schedule": is_schedule,
-            "is_price": is_price
+            "is_price": is_price,
+            "is_general_question": is_general_question,
         }
     except Exception as e:
         debug(f"Error extracting information: {e}")
         return {}
 
+def get_opening_status(date, schedule):
+    """
+    Vérifie si le phare est ouvert pour une date donnée, en tenant compte des horaires réguliers et exceptionnels.
+    """
+    if not date:
+        return "Date non spécifiée. Veuillez indiquer une date pour vérifier les horaires."
+
+    date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+
+    # Vérification des ouvertures exceptionnelles
+    for period in schedule:
+        if period.get("type") == "exceptional":
+            exceptional_openings = period.get("exceptional_opening", [])
+            for exception in exceptional_openings:
+                exception_date = datetime.strptime(exception["date"], "%Y-%m-%d").date()
+                if exception_date == date_obj:
+                    return f"Ouverture exceptionnelle le {date} : {exception['hours']} (dernière montée à {exception['last_entry']})."
+
+    # Vérification des ouvertures régulières
+    day_number = date_obj.weekday()
+    french_days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+    day_name = french_days[day_number]
+
+    for period in schedule:
+        if period.get("type") == "regular":
+            start_date = datetime.strptime(period["start_date"], "%Y-%m-%d").date()
+            end_date = datetime.strptime(period["end_date"], "%Y-%m-%d").date()
+            if start_date <= date_obj <= end_date and day_name in period.get("days_open", []):
+                return f"Ouvert le {date} : {period['hours']} (dernière montée à {period['last_entry']})."
+
+    # Si aucune correspondance n'est trouvée
+    return f"Fermé le {date}."
+
+
 def calculate_pricing(adults, children, pricing):
+    """
+    Calcule le tarif total pour les adultes et les enfants.
+    Ajoute automatiquement un adulte si aucun n'est mentionné pour accompagner des enfants.
+    """
+    # Ajouter un adulte par défaut si aucun n'est mentionné
     if adults == 0 and children:
         adults = 1
 
@@ -146,62 +544,167 @@ def calculate_pricing(adults, children, pricing):
 
     return total_price, child_details
 
-def get_opening_status(date, schedule):
-    if not date:
-        return "Date non spécifiée. Veuillez indiquer une date pour vérifier les horaires."
+def detect_pet_related_query(user_message):
+    dog_keywords = ["chien", "toutou", "cabot", "canidé", "dog"]
+    cat_keywords = ["chat", "minou", "félin","cat", "kitty"]
+    general_pet_keywords = ["animal", "animaux", "pets"]
 
-    date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    contains_dog = any(keyword in user_message.lower() for keyword in dog_keywords)
+    contains_cat = any(keyword in user_message.lower() for keyword in cat_keywords)
+    contains_general_pet = any(keyword in user_message.lower() for keyword in general_pet_keywords)
 
-    for period in schedule:
-        if period.get("type") == "exceptional":
-            exceptional_openings = period.get("exceptional_opening", [])
-            for exception in exceptional_openings:
-                exception_date = datetime.strptime(exception["date"], "%Y-%m-%d").date()
-                if exception_date == date_obj:
-                    return f"Ouverture exceptionnelle le {date} : {exception['hours']} (dernière montée à {exception['last_entry']})."
+    return {
+        "dog": contains_dog,
+        "cat": contains_cat,
+        "general_pet": contains_general_pet
+    }
 
-    day_number = date_obj.weekday()
-    french_days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-    day_name = french_days[day_number]
+def create_prompt(user_message_translated, extracted_info, knowledge_base, lang):
+    print(f"Creating prompt for translated message: {user_message_translated}")
+    print("Extracted information:", extracted_info)
 
-    for period in schedule:
-        if period.get("type") == "regular":
-            start_date = datetime.strptime(period["start_date"], "%Y-%m-%d").date()
-            end_date = datetime.strptime(period["end_date"], "%Y-%m-%d").date()
-            if start_date <= date_obj <= end_date and day_name in period.get("days_open", []):
-                return f"Ouvert le {date} : {period['hours']} (dernière montée à {period['last_entry']})."
+    # Extraction des données nécessaires
+    date = extracted_info.get("date")
+    adults = extracted_info.get("adults", 1)
+    children = extracted_info.get("children", [])
+    pet_query = detect_pet_related_query(user_message_translated)
+    is_schedule = extracted_info.get("is_schedule", False)
+    pricing = knowledge_base.get("pricing", {})
+    schedule = knowledge_base.get("schedule", [])
+    faq = knowledge_base.get("faq", [])
+    questions_and_responses = knowledge_base.get("questions_and_responses", [])
 
-    return f"Fermé le {date}."
+    # Gestion des horaires
+    schedule_response = ""
+    if date:
+        schedule_response = get_opening_status(date, schedule)
+    else:
+        schedule_response = "Je n'ai pas détecté de date. Pouvez-vous préciser une date pour vérifier les horaires ?"
+
+    # Gestion des tarifs
+    pricing_response = ""
+    if children or adults > 0:
+        if adults == 0 and children:
+            adults = 1
+            pricing_response = (
+                "Aucun adulte n'était mentionné, donc j'ai supposé qu'un adulte accompagnerait les enfants. "
+            )
+        total_price, child_details = calculate_pricing(adults, children, pricing)
+        pricing_response += (
+            f"Le tarif total est de {total_price}€ : {adults} adulte(s) et {len(children)} enfant(s) ({', '.join(child_details)})."
+        )
+    else:
+        pricing_response = "Aucune demande de tarif mentionnée. Spécifiez la composition du groupe pour plus de détails."
+
+    # Gestion des animaux
+    pet_response = ""
+    if pet_query["dog"] or pet_query["cat"] or pet_query["general_pet"]:
+        pet_response = (
+            "Ahoy, marin d'eau douce ! Ton compagnon à quatre pattes est le bienvenu dans les espaces extérieurs du Phare, "
+            "mais il ne peut pas entrer dans la tour ni dans le blockhaus. Pendant que tu explores, ton fidèle ami pourra profiter de l'air marin, accompagné d'un humain, bien sûr."
+        )
+
+    # Construction de la réponse finale
+    response_parts = [
+        f"Horaires pour le {date}: {schedule_response}" if date else schedule_response,
+        pricing_response,
+        pet_response,
+    ]
+    final_response = " ".join([part for part in response_parts if part])
+
+    # Construire le prompt final
+    prompt = f"""
+    You are Archibald, the wise and slightly grumpy keeper of the Cap Ferret Lighthouse.
+    Respond in the detected language: {lang}.
+    Speak warmly but concisely (no more than 450 characters), using maritime metaphors and your deep passion for the lighthouse.
+    Here is the user's question: "{user_message_translated}"
+    Use this information to craft your response: "{final_response.strip()}"
+    Respond in the detected language: {lang}.
+    """
+    return prompt
+
+
+
+# Limiter à 5 requêtes par session
+def limit_requests():
+    """
+    Vérifie si l'utilisateur a atteint la limite de requêtes dans une session.
+    """
+    if "request_count" not in session:
+        session["request_count"] = 0
+    session["request_count"] += 1
+    print(f"Current request count: {session['request_count']}")  # Debugging log
+    if session["request_count"] > 5:
+        print("Request limit exceeded.")  # Debugging log
+        return False
+    return True
+
+@app.route("/debug_knowledge", methods=["GET"])
+def debug_knowledge():
+    """
+    Route de débogage pour afficher la base de connaissances prétraitée.
+    """
+    return jsonify(knowledge_base)
 
 @app.route("/chat", methods=["POST"])
+@cross_origin(origins=["https://phareducapferret.com"], supports_credentials=True)  # Use cross_origin here
 def chat():
     user_message = request.json.get("message")
+    print("Step 1: Received user message:", user_message)
 
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
 
+    # Détecter la langue
     lang = detect_language(user_message)
+    print("Step 2: Detected language:", lang)
 
+    # Traduire le message vers le français si ce n'est pas déjà en français
     if lang != "fr":
-        translator_to_french = Translator(to_lang="fr")
-        user_message_translated = translator_to_french.translate(user_message)
+        try:
+            translator_to_french = Translator(to_lang="fr")
+            user_message_translated = translator_to_french.translate(user_message)
+            print("Step 3: Translated message to French:", user_message_translated)
+        except Exception as e:
+            print(f"Error during translation: {e}")
+            return jsonify({"error": "An error occurred while translating the message."}), 500
     else:
         user_message_translated = user_message
 
+    # Extraire les informations du message traduit
     extracted_info = extract_info(user_message_translated)
+    print("Step 4: Extracted information:", extracted_info)
 
-    date = extracted_info.get("date")
-    adults = extracted_info.get("adults", 1)
-    children = extracted_info.get("children", [])
-    schedule_response = get_opening_status(date, knowledge_base["schedule"]) if date else "Veuillez préciser une date."
+    # Créer le prompt
+    prompt = create_prompt(user_message_translated, extracted_info, knowledge_base, lang=lang)
+    print("Step 5: Generated prompt:", prompt)
 
-    pricing_response = ""
-    if children or adults > 0:
-        total_price, child_details = calculate_pricing(adults, children, knowledge_base["pricing"])
-        pricing_response = f"Le tarif total est de {total_price}€."
-
-    response = f"{schedule_response} {pricing_response}"
-    return jsonify({"response": response})
+    # Appel à OpenAI pour générer la réponse
+    try:
+        print("Step 6: Sending prompt to OpenAI...")
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are Archibald, the knowledgeable lighthouse keeper."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=300,
+            temperature=0.7,
+        )
+        # Traduire la réponse générée si nécessaire
+        chat_response = response["choices"][0]["message"]["content"].strip()
+        if lang != "fr":
+            translator_to_user_lang = Translator(to_lang=lang)
+            chat_response_translated = translator_to_user_lang.translate(chat_response)
+            print("Step 6: Translated response to user's language:", chat_response_translated)
+            return jsonify({"response": chat_response_translated})
+        else:
+            return jsonify({"response": chat_response})
+    except Exception as e:
+        print(f"Error during OpenAI call: {e}")
+        return jsonify({"error": "An error occurred while processing your request."}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='10.100.0.244', port=5000)
+message.txt
+17 KB
