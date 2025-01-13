@@ -496,115 +496,56 @@ def detect_pet_related_query(user_message):
 
 
 def create_prompt(user_message_translated, extracted_info, knowledge_base, lang):
-
     print(f"Creating prompt for translated message: {user_message_translated}")
-
     print("Extracted information:", extracted_info)
 
-
-
     # Extraction des données nécessaires
-
     date = extracted_info.get("date")
-
     adults = extracted_info.get("adults", 1)
-
     children = extracted_info.get("children", [])
-
     pet_query = detect_pet_related_query(user_message_translated)
-
     is_schedule = extracted_info.get("is_schedule", False)
+    is_price = extracted_info.get("is_price", False)
 
-    pricing = knowledge_base.get("pricing", {})
+    # Messages prédéfinis pour les redirections
+    schedule_message = (
+        "Les horaires changent selon la saison. Pour consulter les horaires à jour, rendez-vous sur cette page : "
+        "https://phareducapferret.com/horaires-et-tarifs/."
+    )
 
-    schedule = knowledge_base.get("schedule", [])
+    pricing_message = (
+        "Les tarifs sont de 7€ par adulte et 4€ par enfant. Veuillez consulter les informations à jour ici : "
+        "https://phareducapferret.com/horaires-et-tarifs/."
+    )
 
-    faq = knowledge_base.get("faq", [])
+    pet_message = (
+        "Ahoy, marin d'eau douce ! Les animaux ne sont pas autorisés à entrer dans la tour ni dans le blockhaus. "
+        "Ils peuvent rester dans les espaces extérieurs sous supervision humaine à tout moment."
+    )
 
-    questions_and_responses = knowledge_base.get("questions_and_responses", [])
+    children_message = (
+        "Les enfants sont les bienvenus au Phare, mais ils doivent être accompagnés et surveillés par un adulte."
+    )
 
+    # Construction des réponses
+    response_parts = []
 
+    if is_schedule:
+        response_parts.append(schedule_message)
 
-    # Gestion des horaires
-
-    schedule_response = ""
-
-    if date:
-
-        schedule_response = get_opening_status(date, schedule)
-
-    else:
-
-        schedule_response = "Je n'ai pas détecté de date. Pouvez-vous préciser une date pour vérifier les horaires ?"
-
-
-
-    # Gestion des tarifs
-
-    pricing_response = ""
-
-    if children or adults > 0:
-
-        if adults == 0 and children:
-
-            adults = 1
-
-            pricing_response = (
-
-                "Aucun adulte n'était mentionné, donc j'ai supposé qu'un adulte accompagnerait les enfants. "
-
-            )
-
-        total_price, child_details = calculate_pricing(adults, children, pricing)
-
-        pricing_response += (
-
-            f"Le tarif total est de {total_price}€ : {adults} adulte(s) et {len(children)} enfant(s) ({', '.join(child_details)})."
-
-        )
-
-    else:
-
-        pricing_response = "Aucune demande de tarif mentionnée. Spécifiez la composition du groupe pour plus de détails."
-
-
-
-    # Gestion des animaux
-
-    pet_response = ""
+    if is_price:
+        response_parts.append(pricing_message)
 
     if pet_query["dog"] or pet_query["cat"] or pet_query["general_pet"]:
+        response_parts.append(pet_message)
 
-        pet_response = (
+    response_parts.append(children_message)
 
-            "Ahoy, marin d'eau douce ! Ton compagnon à quatre pattes est le bienvenu dans les espaces extérieurs du Phare, "
-
-            "mais il ne peut pas entrer dans la tour ni dans le blockhaus. Pendant que tu explores, ton fidèle ami pourra profiter de l'air marin, accompagné d'un humain, bien sûr."
-
-        )
-
-
-
-    # Construction de la réponse finale
-
-    response_parts = [
-
-        f"Horaires pour le {date}: {schedule_response}" if date else schedule_response,
-
-        pricing_response,
-
-        pet_response,
-
-    ]
-
-    final_response = " ".join([part for part in response_parts if part])
-
-
+    # Joindre toutes les parties de réponse
+    final_response = " ".join(response_parts)
 
     # Construire le prompt final
-
     prompt = f"""
-
     You are Archibald, the wise and slightly grumpy keeper of the Cap Ferret Lighthouse. 
 
     Respond in the detected language: {lang}.
@@ -616,16 +557,9 @@ def create_prompt(user_message_translated, extracted_info, knowledge_base, lang)
     Use this information to craft your response: "{final_response.strip()}"
 
     Respond in the detected language: {lang}.
-
     """
 
     return prompt
-
-
-
-
-
-
 
 # Limiter à 5 requêtes par session
 
