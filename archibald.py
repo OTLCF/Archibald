@@ -200,40 +200,6 @@ MONTHS_FR = {
 }
 
 
-
-def parse_date_localized(date_string, locale="fr_FR"):
-
-    try:
-
-        date_string = date_string.strip()
-
-        match = re.search(r"(\d{1,2})\s(\w+)\s(\d{4})", date_string, re.IGNORECASE)
-
-        if match:
-
-            day = int(match.group(1))
-
-            month_name = match.group(2).lower()
-
-            year = int(match.group(3))
-
-            month = MONTHS_FR.get(month_name)
-
-            if month:
-
-                parsed_date = datetime(year, month, day)
-
-                return parsed_date.date()
-
-        return parse(date_string, fuzzy=True).date()
-
-    except Exception as e:
-
-        debug(f"Error during parsing: {e}")
-
-        return None
-
-
 def parse_relative_date(user_message):
     """
     Détecte et convertit les expressions relatives de date en format YYYY-MM-DD.
@@ -280,7 +246,6 @@ def parse_relative_date(user_message):
             return parsed_date
 
     return None  # Aucun match trouvé
-
 
 def detect_language(user_message):
 
@@ -331,38 +296,57 @@ def translate_with_dictionary(text, target_language):
     return translator.translate(text)
 
 
+
 def extract_info(user_message):
-    """
-    Analyse le message pour extraire uniquement les informations pertinentes.
-    - Ne cherche une date QUE si la question concerne les horaires.
-    - Ne demande pas la composition du groupe sauf pour un tarif.
-    """
+
     try:
+
+        date_match = re.search(r"\b(\d{1,2}\s(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s\d{4})\b", user_message, re.IGNORECASE)
+
+        date = parse_date_localized(date_match.group(1)) if date_match else None
+
+        adults_match = re.search(r"(\d+)\sadultes?", user_message)
+
+        adults = int(adults_match.group(1)) if adults_match else 0
+
+        children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
+
+        children = [int(match[0]) for match in children_matches]
+
         is_schedule = "horaire" in user_message.lower() or "ouvert" in user_message.lower()
+
         is_price = "tarif" in user_message.lower() or "prix" in user_message.lower()
 
-        date = parse_relative_date(user_message) if is_schedule else None
+        
 
-        # Ne cherche la composition du groupe que si on parle des tarifs
-        adults = children = []
-        if is_price:
-            adults_match = re.search(r"(\d+)\sadultes?", user_message)
-            adults = int(adults_match.group(1)) if adults_match else 0
+        # Détecter les questions générales
 
-            children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
-            children = [int(match[0]) for match in children_matches]
+        is_general_question = not (is_schedule or is_price or date)
+
+        
 
         return {
+
             "date": date.isoformat() if date else None,
+
             "adults": adults,
+
             "children": children,
+
             "is_schedule": is_schedule,
-            "is_price": is_price
+
+            "is_price": is_price,
+
+            "is_general_question": is_general_question,
+
         }
 
     except Exception as e:
-        print(f"Erreur lors de l'extraction des informations: {e}")
+
+        debug(f"Error extracting information: {e}")
+
         return {}
+
 
 
 def get_opening_status(date, schedule):
@@ -429,39 +413,65 @@ def get_opening_status(date, schedule):
 
     return f"Fermé le {date}."
 
-def calculate_pricing(adults, children):
+
+
+
+
+def calculate_pricing(adults, children, pricing):
+
     """
-    Calcule le tarif total pour un groupe donné.
-    Toujours afficher les prix unitaires et avertir sur la fiabilité du calcul.
+
+    Calcule le tarif total pour les adultes et les enfants.
+
+    Ajoute automatiquement un adulte si aucun n'est mentionné pour accompagner des enfants.
+
     """
-    adult_price = 7
-    child_price = 4
-    free_below_age = 5
-    adult_age_threshold = 13
+
+    # Ajouter un adulte par défaut si aucun n'est mentionné
 
     if adults == 0 and children:
-        adults = 1  # Ajouter un adulte par défaut
+
+        adults = 1
+
+
+
+    adult_price = pricing.get("adult_price", 7)
+
+    child_price = pricing.get("child_price", 4)
+
+    free_below_age = pricing.get("child_free_below_age", 5)
+
+    adult_age_threshold = pricing.get("adult_age_threshold", 13)
+
+
 
     total_price = adults * adult_price
+
     child_details = []
 
+
+
     for child in children:
+
         if child < free_below_age:
+
             child_details.append(f"{child} ans (gratuit)")
+
         elif child >= adult_age_threshold:
+
             child_details.append(f"{child} ans ({adult_price}€ - tarif adulte)")
+
             total_price += adult_price
+
         else:
+
             child_details.append(f"{child} ans ({child_price}€)")
+
             total_price += child_price
 
-    warning_message = (
-        "⚠️ Je suis un vieux gardien et parfois je peux mal comprendre. "
-        "Vérifiez toujours les prix sur le site officiel : "
-        "👉 https://phareducapferret.com/horaires-et-tarifs/"
-    )
 
-    return total_price, adult_price, child_price, child_details, warning_message
+
+    return total_price, child_details
 
 
 
@@ -493,76 +503,100 @@ def detect_pet_related_query(user_message):
 
     }
 
-def create_prompt(user_message_translated, extracted_info, lang):
-    print(f"Creating prompt for: {user_message_translated}")
+
+
+def create_prompt(user_message_translated, extracted_info, knowledge_base, lang):
+    print(f"Creating prompt for translated message: {user_message_translated}")
     print("Extracted information:", extracted_info)
 
-    is_schedule = extracted_info.get("is_schedule", False)
-    is_price = extracted_info.get("is_price", False)
+    # Extraction des données nécessaires
+    date = extracted_info.get("date")
     adults = extracted_info.get("adults", 1)
     children = extracted_info.get("children", [])
+    pet_query = detect_pet_related_query(user_message_translated)
+    is_schedule = extracted_info.get("is_schedule", False)
+    is_price = extracted_info.get("is_price", False)
 
-    response_parts = []
-
-    # 🕒 Horaires → Répondre directement sans exiger plus d'infos
-    if is_schedule:
-        response_parts.append(
-            "📌 Les horaires du phare changent selon la saison ! "
-            "Vérifiez-les toujours ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
-        )
-
-    # 🎟️ Tarifs → Donner directement les prix sans poser de questions inutiles
-    if is_price:
-        total_price, adult_price, child_price, child_details, warning_message = calculate_pricing(adults, children)
-        details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
-
-        response_parts.append(
-            f"🎟️ Tarifs : **{adult_price}€ par adulte**, **{child_price}€ par enfant**.\n"
-            f"💰 Estimation pour {adults} adulte(s) et {details_str} : **{total_price}€**\n"
-            f"{warning_message}"
-        )
-
-    # Si aucun tarif ni horaire, donner une réponse plus générique
-    if not is_schedule and not is_price:
-    response_parts.append(
-        "Ahoy, cher visiteur ! 🌊 Je veille sur le phare du Cap Ferret, toujours prêt à vous guider. "
-        "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+    # Messages prédéfinis pour les redirections
+    schedule_message = (
+        "Les horaires changent selon la saison. Pour consulter les horaires à jour, rendez-vous sur cette page : "
+        "https://phareducapferret.com/horaires-et-tarifs/."
     )
 
+    pricing_message = (
+        "Les tarifs sont de 7€ par adulte et 4€ par enfant. Veuillez consulter les informations à jour ici : "
+        "https://phareducapferret.com/horaires-et-tarifs/."
+    )
+
+    pet_message = (
+        "Ahoy, marin d'eau douce ! Les animaux ne sont pas autorisés à entrer dans la tour ni dans le blockhaus. "
+        "Ils peuvent rester dans les espaces extérieurs sous supervision humaine à tout moment."
+    )
+
+    children_message = (
+        "Les enfants sont les bienvenus au Phare, mais ils doivent être accompagnés et surveillés par un adulte."
+    )
+
+    # Construction des réponses
+    response_parts = []
+
+    if is_schedule:
+        response_parts.append(schedule_message)
+
+    if is_price:
+        response_parts.append(pricing_message)
+
+    if pet_query["dog"] or pet_query["cat"] or pet_query["general_pet"]:
+        response_parts.append(pet_message)
+
+    response_parts.append(children_message)
+
+    # Joindre toutes les parties de réponse
     final_response = " ".join(response_parts)
 
-    # 🔹 Prompt final pour OpenAI
+    # Construire le prompt final
     prompt = f"""
-    You are Archibald, the wise and slightly grumpy lighthouse keeper. 
+    You are Archibald, the wise and slightly grumpy keeper of the Cap Ferret Lighthouse. 
 
     Respond in the detected language: {lang}.
 
-    Speak warmly but concisely, using maritime metaphors and humor.
+    Speak warmly but concisely (no more than 450 characters), using maritime metaphors and your deep passion for the lighthouse.
 
     Here is the user's question: "{user_message_translated}"
 
-    Use this information: "{final_response.strip()}"
+    Use this information to craft your response: "{final_response.strip()}"
 
     Respond in the detected language: {lang}.
     """
 
     return prompt
 
-
 # Limiter à 5 requêtes par session
 
 def limit_requests():
+
+    """
+
+    Vérifie si l'utilisateur a atteint la limite de requêtes dans une session.
+
+    """
+
     if "request_count" not in session:
+
         session["request_count"] = 0
 
     session["request_count"] += 1
 
-    print(f"DEBUG: Nombre de requêtes actuelles : {session['request_count']}")
+    print(f"Current request count: {session['request_count']}")  # Debugging log
 
     if session["request_count"] > 5:
-        return jsonify({"error": "Trop de requêtes ! ⛔ Reposez-vous un peu avant de continuer."}), 429
+
+        print("Request limit exceeded.")  # Debugging log
+
+        return False
 
     return True
+
 
 
 @app.route("/debug_knowledge", methods=["GET"])
@@ -697,7 +731,6 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True, host="100.0.0.98", port=5000)
-
 
 
 
