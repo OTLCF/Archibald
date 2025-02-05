@@ -234,7 +234,51 @@ def parse_date_localized(date_string, locale="fr_FR"):
         return None
 
 
+def parse_relative_date(user_message):
+    """
+    Détecte et convertit les expressions relatives de date en format YYYY-MM-DD.
+    Exemples : "aujourd'hui", "demain", "dans trois jours", "le 8 mars"
+    """
+    today = datetime.today()
+    user_message = user_message.lower().strip()
 
+    # Expressions simples
+    if "aujourd'hui" in user_message:
+        return today.date()
+    if "demain" in user_message:
+        return (today + timedelta(days=1)).date()
+    if "après-demain" in user_message:
+        return (today + timedelta(days=2)).date()
+
+    # Expressions avec "dans X jours"
+    match_relative = re.search(r"dans (\d+) jours?", user_message)
+    if match_relative:
+        days_ahead = int(match_relative.group(1))
+        return (today + timedelta(days=days_ahead)).date()
+
+    # Expressions avec une date explicite comme "le 8 mars"
+    match_explicit = re.search(r"le (\d{1,2}) (\w+)", user_message)
+    if match_explicit:
+        day = int(match_explicit.group(1))
+        month_name = match_explicit.group(2)
+
+        # Dictionnaire des mois en français
+        MONTHS_FR = {
+            "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+            "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
+        }
+
+        if month_name in MONTHS_FR:
+            year = today.year
+            parsed_date = datetime(year, MONTHS_FR[month_name], day).date()
+
+            # Si la date est passée cette année, on suppose qu'on parle de l'année prochaine
+            if parsed_date < today.date():
+                parsed_date = datetime(year + 1, MONTHS_FR[month_name], day).date()
+
+            return parsed_date
+
+    return None  # Aucun match trouvé
 
 
 def detect_language(user_message):
@@ -288,55 +332,43 @@ def translate_with_dictionary(text, target_language):
 
 
 def extract_info(user_message):
-
+    """
+    Analyse le message de l'utilisateur pour extraire des informations utiles :
+    - Date (ex : "aujourd'hui", "demain", "le 8 mars", "dans trois jours")
+    - Nombre d'adultes et d'enfants
+    - Si la demande concerne les horaires ou les tarifs
+    """
     try:
+        # Vérifier si l'utilisateur mentionne une date relative ou explicite
+        date = parse_relative_date(user_message)
 
-        date_match = re.search(r"\b(\d{1,2}\s(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s\d{4})\b", user_message, re.IGNORECASE)
-
-        date = parse_date_localized(date_match.group(1)) if date_match else None
-
+        # Recherche du nombre d'adultes
         adults_match = re.search(r"(\d+)\sadultes?", user_message)
-
         adults = int(adults_match.group(1)) if adults_match else 0
 
+        # Recherche du nombre d'enfants
         children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
-
         children = [int(match[0]) for match in children_matches]
 
+        # Détection des requêtes sur les horaires et tarifs
         is_schedule = "horaire" in user_message.lower() or "ouvert" in user_message.lower()
-
         is_price = "tarif" in user_message.lower() or "prix" in user_message.lower()
 
-        
-
-        # Détecter les questions générales
-
+        # Détecter les questions générales (si ce n'est pas une requête de date, horaire ou tarif)
         is_general_question = not (is_schedule or is_price or date)
 
-        
-
         return {
-
             "date": date.isoformat() if date else None,
-
             "adults": adults,
-
             "children": children,
-
             "is_schedule": is_schedule,
-
             "is_price": is_price,
-
             "is_general_question": is_general_question,
-
         }
 
     except Exception as e:
-
-        debug(f"Error extracting information: {e}")
-
+        print(f"Erreur lors de l'extraction des informations: {e}")
         return {}
-
 
 
 def get_opening_status(date, schedule):
