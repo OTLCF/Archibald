@@ -242,8 +242,8 @@ def parse_relative_date(user_message):
     today = datetime.today()
     user_message = user_message.lower().strip()
 
-    # Expressions simples
-    if "aujourd'hui" in user_message:
+    # Vérifier si "aujourd'hui" est bien compris
+    if "aujourd'hui" in user_message or "aujourdhui" in user_message:
         return today.date()
     if "demain" in user_message:
         return (today + timedelta(days=1)).date()
@@ -262,7 +262,6 @@ def parse_relative_date(user_message):
         day = int(match_explicit.group(1))
         month_name = match_explicit.group(2)
 
-        # Dictionnaire des mois en français
         MONTHS_FR = {
             "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
             "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
@@ -272,7 +271,6 @@ def parse_relative_date(user_message):
             year = today.year
             parsed_date = datetime(year, MONTHS_FR[month_name], day).date()
 
-            # Si la date est passée cette année, on suppose qu'on parle de l'année prochaine
             if parsed_date < today.date():
                 parsed_date = datetime(year + 1, MONTHS_FR[month_name], day).date()
 
@@ -330,40 +328,33 @@ def translate_with_dictionary(text, target_language):
     return translator.translate(text)
 
 
-
 def extract_info(user_message):
     """
-    Analyse le message de l'utilisateur pour extraire des informations utiles :
-    - Date (ex : "aujourd'hui", "demain", "le 8 mars", "dans trois jours")
-    - Nombre d'adultes et d'enfants
-    - Si la demande concerne les horaires ou les tarifs
+    Analyse le message pour extraire uniquement les informations pertinentes.
+    - Ne cherche une date QUE si la question concerne les horaires.
+    - Ne demande pas la composition du groupe sauf pour un tarif.
     """
     try:
-        # Vérifier si l'utilisateur mentionne une date relative ou explicite
-        date = parse_relative_date(user_message)
-
-        # Recherche du nombre d'adultes
-        adults_match = re.search(r"(\d+)\sadultes?", user_message)
-        adults = int(adults_match.group(1)) if adults_match else 0
-
-        # Recherche du nombre d'enfants
-        children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
-        children = [int(match[0]) for match in children_matches]
-
-        # Détection des requêtes sur les horaires et tarifs
         is_schedule = "horaire" in user_message.lower() or "ouvert" in user_message.lower()
         is_price = "tarif" in user_message.lower() or "prix" in user_message.lower()
 
-        # Détecter les questions générales (si ce n'est pas une requête de date, horaire ou tarif)
-        is_general_question = not (is_schedule or is_price or date)
+        date = parse_relative_date(user_message) if is_schedule else None
+
+        # Ne cherche la composition du groupe que si on parle des tarifs
+        adults = children = []
+        if is_price:
+            adults_match = re.search(r"(\d+)\sadultes?", user_message)
+            adults = int(adults_match.group(1)) if adults_match else 0
+
+            children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
+            children = [int(match[0]) for match in children_matches]
 
         return {
             "date": date.isoformat() if date else None,
             "adults": adults,
             "children": children,
             "is_schedule": is_schedule,
-            "is_price": is_price,
-            "is_general_question": is_general_question,
+            "is_price": is_price
         }
 
     except Exception as e:
@@ -435,69 +426,39 @@ def get_opening_status(date, schedule):
 
     return f"Fermé le {date}."
 
-
-
-
-
-def calculate_pricing(adults, children, pricing):
-
+def calculate_pricing(adults, children):
     """
-
-    Calcule le tarif total pour les adultes et les enfants.
-
-    Ajoute automatiquement un adulte si aucun n'est mentionné pour accompagner des enfants.
-
+    Calcule le tarif total pour un groupe donné.
+    Toujours afficher les prix unitaires et avertir sur la fiabilité du calcul.
     """
-
-    # Ajouter un adulte par défaut si aucun n'est mentionné
+    adult_price = 7
+    child_price = 4
+    free_below_age = 5
+    adult_age_threshold = 13
 
     if adults == 0 and children:
-
-        adults = 1
-
-
-
-    adult_price = pricing.get("adult_price", 7)
-
-    child_price = pricing.get("child_price", 4)
-
-    free_below_age = pricing.get("child_free_below_age", 5)
-
-    adult_age_threshold = pricing.get("adult_age_threshold", 13)
-
-
+        adults = 1  # Ajouter un adulte par défaut
 
     total_price = adults * adult_price
-
     child_details = []
 
-
-
     for child in children:
-
         if child < free_below_age:
-
             child_details.append(f"{child} ans (gratuit)")
-
         elif child >= adult_age_threshold:
-
             child_details.append(f"{child} ans ({adult_price}€ - tarif adulte)")
-
             total_price += adult_price
-
         else:
-
             child_details.append(f"{child} ans ({child_price}€)")
-
             total_price += child_price
 
-# Message d'avertissement pour prévenir des erreurs possibles
     warning_message = (
-        "⚠️ Attention : Ce calcul est basé sur les informations fournies. "
-        "Il peut contenir des erreurs si des détails sont manquants ou mal compris."
+        "⚠️ Je suis un vieux gardien et parfois je peux mal comprendre. "
+        "Vérifiez toujours les prix sur le site officiel : "
+        "👉 https://phareducapferret.com/horaires-et-tarifs/"
     )
 
-    return total_price, child_details, warning_message
+    return total_price, adult_price, child_price, child_details, warning_message
 
 
 
@@ -529,77 +490,47 @@ def detect_pet_related_query(user_message):
 
     }
 
-
-
-def create_prompt(user_message_translated, extracted_info, knowledge_base, lang):
-    print(f"Creating prompt for translated message: {user_message_translated}")
+def create_prompt(user_message_translated, extracted_info, lang):
+    print(f"Creating prompt for: {user_message_translated}")
     print("Extracted information:", extracted_info)
 
-    # Extraction des données nécessaires
-    date = extracted_info.get("date")
-    adults = extracted_info.get("adults", 1)
-    children = extracted_info.get("children", [])
-    pet_query = detect_pet_related_query(user_message_translated)
     is_schedule = extracted_info.get("is_schedule", False)
     is_price = extracted_info.get("is_price", False)
+    adults = extracted_info.get("adults", 1)
+    children = extracted_info.get("children", [])
 
-    # Messages fixes pour rediriger l'utilisateur
-    schedule_message = (
-        "Les horaires peuvent varier selon la saison. Consulte la page officielle pour être sûr : "
-        "👉 https://phareducapferret.com/horaires-et-tarifs/"
-    )
-
-    pricing_message = (
-        "Le tarif est de **7€ par adulte** et **4€ par enfant**. "
-        "Retrouve toutes les infos ici 👉 https://phareducapferret.com/horaires-et-tarifs/"
-    )
-
-    pet_message = (
-        "Ahoy, marin d'eau douce ! Les animaux ne sont pas autorisés à entrer dans la tour ni dans le blockhaus. "
-        "Ils peuvent rester dans les espaces extérieurs sous supervision humaine à tout moment."
-    )
-
-    children_message = (
-        "Les enfants sont les bienvenus au Phare, mais ils doivent être accompagnés et surveillés par un adulte."
-    )
-
-    # Construction des réponses
     response_parts = []
 
+    # Horaires → Redirection + avertissement
     if is_schedule:
-        response_parts.append(schedule_message)
-
-    if is_price:
-        response_parts.append(pricing_message)
-
-    if pet_query["dog"] or pet_query["cat"] or pet_query["general_pet"]:
-        response_parts.append(pet_message)
-
-    if is_price and (adults or children):
-        total_price, child_details, warning_message = calculate_pricing(adults, children, knowledge_base["pricing"])
-        details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
-        
         response_parts.append(
-            f"Le prix total estimé est de **{total_price}€** ({adults} adulte(s), {details_str}).\n"
+            "📌 Les horaires peuvent varier et je peux me tromper ! "
+            "Vérifiez-les toujours ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
+        )
+
+    # Tarifs → Ajout des prix unitaires + avertissement
+    if is_price:
+        total_price, adult_price, child_price, child_details, warning_message = calculate_pricing(adults, children)
+        details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
+
+        response_parts.append(
+            f"🎟️ Tarifs : **{adult_price}€ par adulte**, **{child_price}€ par enfant**.\n"
+            f"💰 Estimation pour {adults} adulte(s) et {details_str} : **{total_price}€**\n"
             f"{warning_message}"
         )
 
-    response_parts.append(children_message)
-
-    # Joindre toutes les parties de réponse
     final_response = " ".join(response_parts)
 
-    # Construire le prompt final
     prompt = f"""
-    You are Archibald, the wise and slightly grumpy keeper of the Cap Ferret Lighthouse. 
+    You are Archibald, the wise and slightly grumpy lighthouse keeper. 
 
     Respond in the detected language: {lang}.
 
-    Speak warmly but concisely (no more than 450 characters), using maritime metaphors and your deep passion for the lighthouse.
+    Speak warmly but concisely, using maritime metaphors and humor.
 
     Here is the user's question: "{user_message_translated}"
 
-    Use this information to craft your response: "{final_response.strip()}"
+    Use this information: "{final_response.strip()}"
 
     Respond in the detected language: {lang}.
     """
