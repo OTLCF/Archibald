@@ -501,14 +501,14 @@ def create_prompt(user_message_translated, extracted_info, lang):
 
     response_parts = []
 
-    # Horaires → Redirection + avertissement
+    # 🕒 Horaires → Répondre directement sans exiger plus d'infos
     if is_schedule:
         response_parts.append(
             "📌 Les horaires peuvent varier et je peux me tromper ! "
             "Vérifiez-les toujours ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
         )
 
-    # Tarifs → Ajout des prix unitaires + avertissement
+    # 🎟️ Tarifs → Donner directement les prix sans poser de questions inutiles
     if is_price:
         total_price, adult_price, child_price, child_details, warning_message = calculate_pricing(adults, children)
         details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
@@ -519,8 +519,16 @@ def create_prompt(user_message_translated, extracted_info, lang):
             f"{warning_message}"
         )
 
+    # Si aucun tarif ni horaire, donner une réponse plus générique
+    if not is_schedule and not is_price:
+        response_parts.append(
+            "Ahoy, cher visiteur ! Je suis le gardien du phare, toujours prêt à répondre à vos questions sur votre escale maritime. "
+            "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+        )
+
     final_response = " ".join(response_parts)
 
+    # 🔹 Prompt final pour OpenAI
     prompt = f"""
     You are Archibald, the wise and slightly grumpy lighthouse keeper. 
 
