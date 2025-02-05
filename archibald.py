@@ -244,10 +244,13 @@ def parse_relative_date(user_message):
 
     # Vérifier si "aujourd'hui" est bien compris
     if "aujourd'hui" in user_message or "aujourdhui" in user_message:
+        print("DEBUG: Date détectée - Aujourd'hui")
         return today.date()
     if "demain" in user_message:
+        print("DEBUG: Date détectée - Demain")
         return (today + timedelta(days=1)).date()
     if "après-demain" in user_message:
+        print("DEBUG: Date détectée - Après-demain")
         return (today + timedelta(days=2)).date()
 
     # Expressions avec "dans X jours"
@@ -504,7 +507,7 @@ def create_prompt(user_message_translated, extracted_info, lang):
     # 🕒 Horaires → Répondre directement sans exiger plus d'infos
     if is_schedule:
         response_parts.append(
-            "📌 Les horaires peuvent varier et je peux me tromper ! "
+            "📌 Les horaires du phare changent selon la saison ! "
             "Vérifiez-les toujours ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
         )
 
@@ -521,10 +524,10 @@ def create_prompt(user_message_translated, extracted_info, lang):
 
     # Si aucun tarif ni horaire, donner une réponse plus générique
     if not is_schedule and not is_price:
-        response_parts.append(
-            "Ahoy, cher visiteur ! Je suis le gardien du phare, toujours prêt à répondre à vos questions sur votre escale maritime. "
-            "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
-        )
+    response_parts.append(
+        "Ahoy, cher visiteur ! 🌊 Je veille sur le phare du Cap Ferret, toujours prêt à vous guider. "
+        "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+    )
 
     final_response = " ".join(response_parts)
 
@@ -549,29 +552,17 @@ def create_prompt(user_message_translated, extracted_info, lang):
 # Limiter à 5 requêtes par session
 
 def limit_requests():
-
-    """
-
-    Vérifie si l'utilisateur a atteint la limite de requêtes dans une session.
-
-    """
-
     if "request_count" not in session:
-
         session["request_count"] = 0
 
     session["request_count"] += 1
 
-    print(f"Current request count: {session['request_count']}")  # Debugging log
+    print(f"DEBUG: Nombre de requêtes actuelles : {session['request_count']}")
 
     if session["request_count"] > 5:
-
-        print("Request limit exceeded.")  # Debugging log
-
-        return False
+        return jsonify({"error": "Trop de requêtes ! ⛔ Reposez-vous un peu avant de continuer."}), 429
 
     return True
-
 
 
 @app.route("/debug_knowledge", methods=["GET"])
