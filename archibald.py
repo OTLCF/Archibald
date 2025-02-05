@@ -459,9 +459,13 @@ def calculate_pricing(adults, children, pricing):
 
             total_price += child_price
 
+# Message d'avertissement pour prévenir des erreurs possibles
+    warning_message = (
+        "⚠️ Attention : Ce calcul est basé sur les informations fournies. "
+        "Il peut contenir des erreurs si des détails sont manquants ou mal compris."
+    )
 
-
-    return total_price, child_details
+    return total_price, child_details, warning_message
 
 
 
@@ -507,15 +511,15 @@ def create_prompt(user_message_translated, extracted_info, knowledge_base, lang)
     is_schedule = extracted_info.get("is_schedule", False)
     is_price = extracted_info.get("is_price", False)
 
-    # Messages prédéfinis pour les redirections
+    # Messages fixes pour rediriger l'utilisateur
     schedule_message = (
-        "Les horaires changent selon la saison. Pour consulter les horaires à jour, rendez-vous sur cette page : "
-        "https://phareducapferret.com/horaires-et-tarifs/."
+        "Les horaires peuvent varier selon la saison. Consulte la page officielle pour être sûr : "
+        "👉 https://phareducapferret.com/horaires-et-tarifs/"
     )
 
     pricing_message = (
-        "Les tarifs sont de 7€ par adulte et 4€ par enfant. Veuillez consulter les informations à jour ici : "
-        "https://phareducapferret.com/horaires-et-tarifs/."
+        "Le tarif est de **7€ par adulte** et **4€ par enfant**. "
+        "Retrouve toutes les infos ici 👉 https://phareducapferret.com/horaires-et-tarifs/"
     )
 
     pet_message = (
@@ -539,6 +543,15 @@ def create_prompt(user_message_translated, extracted_info, knowledge_base, lang)
     if pet_query["dog"] or pet_query["cat"] or pet_query["general_pet"]:
         response_parts.append(pet_message)
 
+    if is_price and (adults or children):
+        total_price, child_details, warning_message = calculate_pricing(adults, children, knowledge_base["pricing"])
+        details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
+        
+        response_parts.append(
+            f"Le prix total estimé est de **{total_price}€** ({adults} adulte(s), {details_str}).\n"
+            f"{warning_message}"
+        )
+
     response_parts.append(children_message)
 
     # Joindre toutes les parties de réponse
@@ -560,6 +573,7 @@ def create_prompt(user_message_translated, extracted_info, knowledge_base, lang)
     """
 
     return prompt
+
 
 # Limiter à 5 requêtes par session
 
