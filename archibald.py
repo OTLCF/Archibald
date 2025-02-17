@@ -200,52 +200,42 @@ MONTHS_FR = {
 }
 
 
-def parse_relative_date(user_message):
-    """
-    Détecte et convertit les expressions relatives de date en format YYYY-MM-DD.
-    Exemples : "aujourd'hui", "demain", "dans trois jours", "le 8 mars"
-    """
-    today = datetime.today()
-    user_message = user_message.lower().strip()
 
-    # Vérifier si "aujourd'hui" est bien compris
-    if "aujourd'hui" in user_message or "aujourdhui" in user_message:
-        print("DEBUG: Date détectée - Aujourd'hui")
-        return today.date()
-    if "demain" in user_message:
-        print("DEBUG: Date détectée - Demain")
-        return (today + timedelta(days=1)).date()
-    if "après-demain" in user_message:
-        print("DEBUG: Date détectée - Après-demain")
-        return (today + timedelta(days=2)).date()
+def parse_date_localized(date_string, locale="fr_FR"):
 
-    # Expressions avec "dans X jours"
-    match_relative = re.search(r"dans (\d+) jours?", user_message)
-    if match_relative:
-        days_ahead = int(match_relative.group(1))
-        return (today + timedelta(days=days_ahead)).date()
+    try:
 
-    # Expressions avec une date explicite comme "le 8 mars"
-    match_explicit = re.search(r"le (\d{1,2}) (\w+)", user_message)
-    if match_explicit:
-        day = int(match_explicit.group(1))
-        month_name = match_explicit.group(2)
+        date_string = date_string.strip()
 
-        MONTHS_FR = {
-            "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-            "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
-        }
+        match = re.search(r"(\d{1,2})\s(\w+)\s(\d{4})", date_string, re.IGNORECASE)
 
-        if month_name in MONTHS_FR:
-            year = today.year
-            parsed_date = datetime(year, MONTHS_FR[month_name], day).date()
+        if match:
 
-            if parsed_date < today.date():
-                parsed_date = datetime(year + 1, MONTHS_FR[month_name], day).date()
+            day = int(match.group(1))
 
-            return parsed_date
+            month_name = match.group(2).lower()
 
-    return None  # Aucun match trouvé
+            year = int(match.group(3))
+
+            month = MONTHS_FR.get(month_name)
+
+            if month:
+
+                parsed_date = datetime(year, month, day)
+
+                return parsed_date.date()
+
+        return parse(date_string, fuzzy=True).date()
+
+    except Exception as e:
+
+        debug(f"Error during parsing: {e}")
+
+        return None
+
+
+
+
 
 def detect_language(user_message):
 
