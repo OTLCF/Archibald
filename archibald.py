@@ -366,68 +366,37 @@ def extract_info(user_message):
 
 
 def get_opening_status(date, schedule):
-
     """
-
-    Vérifie si le phare est ouvert pour une date donnée, en tenant compte des horaires réguliers et exceptionnels.
-
+    Vérifie si le phare est ouvert à une date donnée.
+    Retourne un message + redirection vers la page officielle des horaires.
     """
-
     if not date:
-
-        return "Date non spécifiée. Veuillez indiquer une date pour vérifier les horaires."
-
-
+        return "📌 Pour consulter les horaires, cliquez ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
 
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-
-
-
-    # Vérification des ouvertures exceptionnelles
-
-    for period in schedule:
-
-        if period.get("type") == "exceptional":
-
-            exceptional_openings = period.get("exceptional_opening", [])
-
-            for exception in exceptional_openings:
-
-                exception_date = datetime.strptime(exception["date"], "%Y-%m-%d").date()
-
-                if exception_date == date_obj:
-
-                    return f"Ouverture exceptionnelle le {date} : {exception['hours']} (dernière montée à {exception['last_entry']})."
-
-
-
-    # Vérification des ouvertures régulières
-
     day_number = date_obj.weekday()
-
     french_days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-
     day_name = french_days[day_number]
 
-
-
+    # Vérifier les ouvertures exceptionnelles
     for period in schedule:
+        if period.get("type") == "exceptional":
+            for exception in period.get("exceptional_opening", []):
+                if exception["date"] == date:
+                    return f"📅 Le phare est **ouvert exceptionnellement** le {date} de {exception['hours']} (dernière montée à {exception['last_entry']})."
 
+    # Vérifier les horaires réguliers
+    for period in schedule:
         if period.get("type") == "regular":
-
             start_date = datetime.strptime(period["start_date"], "%Y-%m-%d").date()
-
             end_date = datetime.strptime(period["end_date"], "%Y-%m-%d").date()
 
             if start_date <= date_obj <= end_date and day_name in period.get("days_open", []):
+                return f"📅 Le phare est **ouvert** le {date} de {period['hours']} (dernière montée à {period['last_entry']})."
 
-                return f"Ouvert le {date} : {period['hours']} (dernière montée à {period['last_entry']})."
+    # Si aucune info trouvée
+    return "📌 Les horaires peuvent varier. Consultez la page officielle : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
 
-
-
-    # Si aucune correspondance n'est trouvée
-
-    return f"Fermé le {date}."
 
 def calculate_pricing(adults, children):
     """
@@ -506,10 +475,8 @@ def create_prompt(user_message_translated, extracted_info, lang):
 
     # 🕒 Horaires → Répondre directement sans exiger plus d'infos
     if is_schedule:
-        response_parts.append(
-            "📌 Les horaires du phare changent selon la saison ! "
-            "Vérifiez-les toujours ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
-        )
+    opening_status = get_opening_status(extracted_info.get("date"), knowledge_base["schedule"])
+    response_parts.append(opening_status)
 
     # 🎟️ Tarifs → Donner directement les prix sans poser de questions inutiles
     if is_price:
@@ -697,3 +664,7 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True, host="100.0.0.98", port=5000)
+
+
+
+
