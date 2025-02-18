@@ -333,31 +333,29 @@ def translate_with_dictionary(text, target_language):
 
 def extract_info(user_message):
     """
-    Analyse le message pour extraire uniquement les informations pertinentes.
-    - Ne cherche une date QUE si la question concerne les horaires.
-    - Ne demande pas la composition du groupe sauf pour un tarif.
+    Analyse le message et extrait :
+    - Une date si l'utilisateur demande un horaire.
+    - Une demande de prix.
+    - Une question sur les animaux.
     """
     try:
-        is_schedule = "horaire" in user_message.lower() or "ouvert" in user_message.lower()
-        is_price = "tarif" in user_message.lower() or "prix" in user_message.lower()
+        # Identifier si la question porte sur les horaires
+        is_schedule = any(word in user_message.lower() for word in ["horaire", "ouvert", "fermé", "heures", "temps"])
 
+        # Identifier si la question porte sur les tarifs
+        is_price = any(word in user_message.lower() for word in ["tarif", "prix", "combien", "coût"])
+
+        # Identifier si la question porte sur les animaux
+        is_pet = any(word in user_message.lower() for word in ["chien", "toutou", "cabot", "canidé", "dog", "chat", "minou", "félin","cat", "kitty", "oiseaux", "animal", "animaux", "pets", "perroquet", "canari", "hamster"])
+
+        # Détecter la date si c'est une question d'horaire
         date = parse_relative_date(user_message) if is_schedule else None
-
-        # Ne cherche la composition du groupe que si on parle des tarifs
-        adults = children = []
-        if is_price:
-            adults_match = re.search(r"(\d+)\sadultes?", user_message)
-            adults = int(adults_match.group(1)) if adults_match else 0
-
-            children_matches = re.findall(r"(\d+)\s(enfants?|ans)", user_message)
-            children = [int(match[0]) for match in children_matches]
 
         return {
             "date": date.isoformat() if date else None,
-            "adults": adults,
-            "children": children,
             "is_schedule": is_schedule,
-            "is_price": is_price
+            "is_price": is_price,
+            "is_pet": is_pet
         }
 
     except Exception as e:
@@ -365,136 +363,43 @@ def extract_info(user_message):
         return {}
 
 
-def get_opening_status(date, schedule):
-    """
-    Vérifie si le phare est ouvert à une date donnée.
-    Retourne un message + redirection vers la page officielle des horaires.
-    """
-    if not date:
-        return "📌 Pour consulter les horaires, cliquez ici : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
-
-    date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-    day_number = date_obj.weekday()
-    french_days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-    day_name = french_days[day_number]
-
-    # Vérifier les ouvertures exceptionnelles
-    for period in schedule:
-        if period.get("type") == "exceptional":
-            for exception in period.get("exceptional_opening", []):
-                if exception["date"] == date:
-                    return f"📅 Le phare est **ouvert exceptionnellement** le {date} de {exception['hours']} (dernière montée à {exception['last_entry']})."
-
-    # Vérifier les horaires réguliers
-    for period in schedule:
-        if period.get("type") == "regular":
-            start_date = datetime.strptime(period["start_date"], "%Y-%m-%d").date()
-            end_date = datetime.strptime(period["end_date"], "%Y-%m-%d").date()
-
-            if start_date <= date_obj <= end_date and day_name in period.get("days_open", []):
-                return f"📅 Le phare est **ouvert** le {date} de {period['hours']} (dernière montée à {period['last_entry']})."
-
-    # Si aucune info trouvée
-    return "📌 Les horaires peuvent varier. Consultez la page officielle : [🕒 Voir les horaires](https://phareducapferret.com/horaires-et-tarifs/)"
-
-
-def calculate_pricing(adults, children):
-    """
-    Calcule le tarif total pour un groupe donné.
-    Toujours afficher les prix unitaires et avertir sur la fiabilité du calcul.
-    """
-    adult_price = 7
-    child_price = 4
-    free_below_age = 5
-    adult_age_threshold = 13
-
-    if adults == 0 and children:
-        adults = 1  # Ajouter un adulte par défaut
-
-    total_price = adults * adult_price
-    child_details = []
-
-    for child in children:
-        if child < free_below_age:
-            child_details.append(f"{child} ans (gratuit)")
-        elif child >= adult_age_threshold:
-            child_details.append(f"{child} ans ({adult_price}€ - tarif adulte)")
-            total_price += adult_price
-        else:
-            child_details.append(f"{child} ans ({child_price}€)")
-            total_price += child_price
-
-    warning_message = (
-        "⚠️ Je suis un vieux gardien et parfois je peux mal comprendre. "
-        "Vérifiez toujours les prix sur le site officiel : "
-        "👉 https://phareducapferret.com/horaires-et-tarifs/"
-    )
-
-    return total_price, adult_price, child_price, child_details, warning_message
-
-
-
-def detect_pet_related_query(user_message):
-
-    dog_keywords = ["chien", "toutou", "cabot", "canidé", "dog"]
-
-    cat_keywords = ["chat", "minou", "félin","cat", "kitty"]
-
-    general_pet_keywords = ["animal", "animaux", "pets"]
-
-
-
-    contains_dog = any(keyword in user_message.lower() for keyword in dog_keywords)
-
-    contains_cat = any(keyword in user_message.lower() for keyword in cat_keywords)
-
-    contains_general_pet = any(keyword in user_message.lower() for keyword in general_pet_keywords)
-
-
-
-    return {
-
-        "dog": contains_dog,
-
-        "cat": contains_cat,
-
-        "general_pet": contains_general_pet
-
-    }
-
 def create_prompt(user_message_translated, extracted_info, lang):
     print(f"Creating prompt for: {user_message_translated}")
     print("Extracted information:", extracted_info)
 
     is_schedule = extracted_info.get("is_schedule", False)
     is_price = extracted_info.get("is_price", False)
-    adults = extracted_info.get("adults", 1)
-    children = extracted_info.get("children", [])
+    is_pet = extracted_info.get("is_pet", False)
 
     response_parts = []
 
-    # 🕒 Horaires → Répondre directement sans exiger plus d'infos
+    # 🔹 Si la question concerne les horaires, il redirige directement vers la page officielle
     if is_schedule:
-    opening_status = get_opening_status(extracted_info.get("date"), knowledge_base["schedule"])
-    response_parts.append(opening_status)
-
-    # 🎟️ Tarifs → Donner directement les prix sans poser de questions inutiles
-    if is_price:
-        total_price, adult_price, child_price, child_details, warning_message = calculate_pricing(adults, children)
-        details_str = ", ".join(child_details) if child_details else "Aucun enfant précisé"
-
         response_parts.append(
-            f"🎟️ Tarifs : **{adult_price}€ par adulte**, **{child_price}€ par enfant**.\n"
-            f"💰 Estimation pour {adults} adulte(s) et {details_str} : **{total_price}€**\n"
-            f"{warning_message}"
+            "📌 Les horaires du phare peuvent varier en fonction de la saison. "
+            "Consultez-les ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
         )
 
-    # Si aucun tarif ni horaire, donner une réponse plus générique
-    if not is_schedule and not is_price:
-    response_parts.append(
-        "Ahoy, cher visiteur ! 🌊 Je veille sur le phare du Cap Ferret, toujours prêt à vous guider. "
-        "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
-    )
+    # 🔹 Si la question concerne les tarifs, il annonce le prix et redirige
+    if is_price:
+        response_parts.append(
+            "🎟️ Le tarif d’entrée est de **7€ pour les adultes** et **4€ pour les enfants**.\n"
+            "📌 Consultez les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
+        )
+
+    # 🔹 Si la question concerne les animaux, il informe des règles
+    if is_pet:
+        response_parts.append(
+            "🐾 Les animaux de compagnie sont **autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n"
+            "📌 Lors de votre visite, ils doivent rester sous surveillance humaine au pied du phare."
+        )
+
+    # 🔹 Réponse par défaut si aucune catégorie ne correspond
+    if not (is_schedule or is_price or is_pet):
+        response_parts.append(
+            "Ahoy, cher visiteur ! 🌊 Je veille sur le phare du Cap Ferret, toujours prêt à vous guider. "
+            "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+        )
 
     final_response = " ".join(response_parts)
 
