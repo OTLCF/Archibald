@@ -181,14 +181,6 @@ knowledge_base = preprocess_knowledge(raw_knowledge_base)  # Prétraitement ici
 
 
 
-# Debugging utilities
-
-def debug(message):
-
-    print(f"DEBUG: {message}")
-
-
-
 # Extract date from French messages
 
 MONTHS_FR = {
@@ -198,40 +190,6 @@ MONTHS_FR = {
     "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
 
 }
-
-
-
-def parse_date_localized(date_string, locale="fr_FR"):
-
-    try:
-
-        date_string = date_string.strip()
-
-        match = re.search(r"(\d{1,2})\s(\w+)\s(\d{4})", date_string, re.IGNORECASE)
-
-        if match:
-
-            day = int(match.group(1))
-
-            month_name = match.group(2).lower()
-
-            year = int(match.group(3))
-
-            month = MONTHS_FR.get(month_name)
-
-            if month:
-
-                parsed_date = datetime(year, month, day)
-
-                return parsed_date.date()
-
-        return parse(date_string, fuzzy=True).date()
-
-    except Exception as e:
-
-        debug(f"Error during parsing: {e}")
-
-        return None
 
 
 def parse_relative_date(user_message):
@@ -283,72 +241,42 @@ def parse_relative_date(user_message):
 
 
 def detect_language(user_message):
-
     """
-
-    Détecte la langue du message utilisateur, avec des règles spécifiques pour des formats attendus.
-
+    Utilise OpenAI pour détecter la langue du message.
     """
-
     try:
-
-        # Vérification de mots-clés typiques en anglais (comme les mois)
-
-        english_months = [
-
-            "january", "february", "march", "april", "may", "june",
-
-            "july", "august", "september", "october", "november", "december"
-
-        ]
-
-        if any(month in user_message.lower() for month in english_months):
-
-            return "en"
-
-        
-
-        # Utiliser la bibliothèque de détection pour les autres cas
-
-        lang = detect(user_message)
-
-        print(f"Detected language: {lang}")
-
-        return lang
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Detect the language of this message and return the language code (fr, en, es, etc.)."},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=10,
+            temperature=0
+        )
+        lang = response["choices"][0]["message"]["content"].strip().lower()
+        print(f"Langue détectée: {lang}")
+        return lang if lang in ["fr", "en", "es", "de", "it"] else "fr"  # Fallback sur français
 
     except Exception as e:
-
-        print(f"Language detection failed: {e}")
-
-        return "en"  # Fallback to English
-
-
-
-def translate_with_dictionary(text, target_language):
-
-    translator = Translator(to_lang=target_language)
-
-    return translator.translate(text)
+        print(f"Erreur de détection de langue: {e}")
+        return "fr"
 
 
 def extract_info(user_message):
     """
-    Analyse le message et extrait :
-    - Une date si l'utilisateur demande un horaire.
+    Analyse le message et détecte :
+    - Une demande sur les horaires.
     - Une demande de prix.
     - Une question sur les animaux.
     """
     try:
-        # Identifier si la question porte sur les horaires
-        is_schedule = any(word in user_message.lower() for word in ["horaire", "ouvert", "fermé", "heures", "temps"])
+        user_message = user_message.lower()
 
-        # Identifier si la question porte sur les tarifs
-        is_price = any(word in user_message.lower() for word in ["tarif", "prix", "combien", "coût"])
+        is_schedule = any(word in user_message for word in ["horaire", "ouvert", "fermé", "heures", "temps", "jours"])
+        is_price = any(word in user_message for word in ["tarif", "prix", "combien", "coût", "entrée"])
+        is_pet = any(word in user_message for word in ["chien", "chat", "oiseau", "animaux", "animal", "perroquet", "hamster", "lapin"])
 
-        # Identifier si la question porte sur les animaux
-        is_pet = any(word in user_message.lower() for word in ["chien", "toutou", "cabot", "canidé", "dog", "chat", "minou", "félin","cat", "kitty", "oiseaux", "animal", "animaux", "pets", "perroquet", "canari", "hamster"])
-
-        # Détecter la date si c'est une question d'horaire
         date = parse_relative_date(user_message) if is_schedule else None
 
         return {
@@ -373,37 +301,35 @@ def create_prompt(user_message_translated, extracted_info, lang):
 
     response_parts = []
 
-    # 🔹 Si la question concerne les horaires, il redirige directement vers la page officielle
+    # 🔹 Horaires : Toujours rediriger vers le site
     if is_schedule:
         response_parts.append(
-            "📌 Les horaires du phare peuvent varier en fonction de la saison. "
+            "📌 Les horaires du phare peuvent varier selon la saison. "
             "Consultez-les ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
         )
 
-    # 🔹 Si la question concerne les tarifs, il annonce le prix et redirige
+    # 🔹 Tarifs : Toujours donner le prix ET le lien
     if is_price:
         response_parts.append(
             "🎟️ Le tarif d’entrée est de **7€ pour les adultes** et **4€ pour les enfants**.\n"
-            "📌 Consultez les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
+            "📌 Consultez tous les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
         )
 
-    # 🔹 Si la question concerne les animaux, il informe des règles
+    # 🔹 Animaux : Explication claire
     if is_pet:
         response_parts.append(
-            "🐾 Les animaux de compagnie sont **autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n"
-            "📌 Lors de votre visite, ils doivent rester sous surveillance humaine au pied du phare."
+            "🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n"
+            "📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite."
         )
 
-    # 🔹 Réponse par défaut si aucune catégorie ne correspond
+    # 🔹 Réponse par défaut
     if not (is_schedule or is_price or is_pet):
         response_parts.append(
-            "Ahoy, cher visiteur ! 🌊 Je veille sur le phare du Cap Ferret, toujours prêt à vous guider. "
-            "Vous pouvez consulter les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+            "Ahoy, cher visiteur ! 🌊 Consultez les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
         )
 
     final_response = " ".join(response_parts)
 
-    # 🔹 Prompt final pour OpenAI
     prompt = f"""
     You are Archibald, the wise and slightly grumpy lighthouse keeper. 
 
