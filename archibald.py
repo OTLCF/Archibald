@@ -437,7 +437,7 @@ def chat():
 
     # Créer le prompt
 
-    prompt = create_prompt(user_message_translated, extracted_info, knowledge_base, lang=lang)
+    prompt = create_prompt(user_message_translated, extracted_info, lang)
 
     print("Step 5: Generated prompt:", prompt)
 
