@@ -10,6 +10,8 @@ from dateutil.parser import parse
 
 from datetime import datetime
 
+from datetime import timedelta
+
 from flask import Flask, request, jsonify, session
 
 from flask_cors import CORS, cross_origin
@@ -241,12 +243,9 @@ def parse_relative_date(user_message):
 
 
 def detect_language(user_message):
-    """
-    Utilise OpenAI pour détecter la langue du message.
-    """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Detect the language of this message and return the language code (fr, en, es, etc.)."},
                 {"role": "user", "content": user_message}
@@ -255,12 +254,19 @@ def detect_language(user_message):
             temperature=0
         )
         lang = response["choices"][0]["message"]["content"].strip().lower()
+        
+        # Vérification que le langage détecté est bien valide
+        if lang not in ["fr", "en", "es", "de", "it"]:
+            print(f"Langue détectée inconnue ({lang}), fallback sur 'fr'.")
+            return "fr"
+
         print(f"Langue détectée: {lang}")
-        return lang if lang in ["fr", "en", "es", "de", "it"] else "fr"  # Fallback sur français
+        return lang
 
     except Exception as e:
         print(f"Erreur de détection de langue: {e}")
-        return "fr"
+        return "fr"  # Fallback sur français en cas d'erreur
+
 
 
 def extract_info(user_message):
@@ -437,7 +443,7 @@ def chat():
 
     # Créer le prompt
 
-    prompt = create_prompt(user_message_translated, extracted_info, knowledge_base, lang=lang)
+    prompt = create_prompt(user_message_translated, extracted_info, lang=lang)
 
     print("Step 5: Generated prompt:", prompt)
 
