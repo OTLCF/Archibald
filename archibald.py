@@ -22,6 +22,8 @@ from translate import Translator
 
 import openai
 
+import difflib
+
 
 
 # Configuration OpenAI
@@ -296,8 +298,7 @@ def extract_info(user_message):
         print(f"Erreur lors de l'extraction des informations: {e}")
         return {}
 
-
-def create_prompt(user_message_translated, extracted_info, lang):
+def create_prompt(user_message_translated, extracted_info, knowledge_base, lang):
     print(f"Creating prompt for: {user_message_translated}")
     print("Extracted information:", extracted_info)
 
@@ -328,12 +329,30 @@ def create_prompt(user_message_translated, extracted_info, lang):
             "📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite."
         )
 
-    # 🔹 Réponse par défaut
+    # 🔹 Sinon → tentative de réponse depuis general_information
     if not (is_schedule or is_price or is_pet):
-        response_parts.append(
-            "Ahoy, cher visiteur ! 🌊 Consultez les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
-        )
+        question_words = user_message_translated.lower().split()
 
+        best_match = None
+        best_score = 0
+
+        for item in knowledge_base.get("general_information", []):
+            key = item.get("key", "").lower()
+            value = item.get("value", "")
+            for word in question_words:
+                score = difflib.SequenceMatcher(None, word, key).ratio()
+                if score > best_score:
+                    best_score = score
+                    best_match = value
+
+        if best_score > 0.6 and best_match:
+            response_parts.append(f"📘 {best_match}")
+        else:
+            response_parts.append(
+                "Ahoy, cher visiteur ! 🌊 Consultez les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+            )
+
+    # ✅ Générer le prompt final
     final_response = " ".join(response_parts)
 
     prompt = f"""
