@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import difflib
 from dotenv import load_dotenv
 from dateutil.parser import parse
 from datetime import datetime, timedelta
@@ -161,8 +162,25 @@ def create_prompt(user_message_translated, extracted_info, lang):
     if is_pet:
         response_parts.append("🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite.")
 
+    # 🔹 Rechercher une info dans general_information
     if not (is_schedule or is_price or is_pet):
-        response_parts.append("Ahoy, cher visiteur ! 🌊 Consultez les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/).")
+        best_match = None
+        best_score = 0
+
+        for item in knowledge_base.get("general_information", []):
+            key = item.get("key", "").lower()
+            value = item.get("value", "")
+            score = difflib.SequenceMatcher(None, user_message_translated.lower(), key).ratio()
+            if score > best_score:
+                best_score = score
+                best_match = value
+
+        if best_score > 0.4 and best_match:
+            response_parts.append(f"📘 {best_match}")
+        else:
+            response_parts.append(
+                "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+            )
 
     final_response = " ".join(response_parts)
 
