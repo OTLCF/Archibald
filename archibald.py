@@ -170,20 +170,7 @@ def create_prompt(user_message_translated, extracted_info, lang):
         "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
     )
     if not (is_schedule or is_price or is_pet):
-        found = False
-        message = user_message_translated.lower()
-
-        for item in knowledge_base.get("general_information", []):
-            key = item.get("key", "").lower()
-            value = item.get("value", "")
-            if key in message:
-                response_parts.append(f"📘 {value}")
-                found = True
-                break
-
-        if not found:
-            response_parts.append(
-                "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
+        response_parts.append("Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
                 "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
 
     final_response = " ".join(response_parts)
