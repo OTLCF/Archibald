@@ -101,6 +101,10 @@
         "value": ". Les chiens et les chats, même bien installés dans leur petit sac, ne sont pas autorisés à entrer dans la tour ni dans le blockhaus. Je sais, ça peut être un peu décevant, mais c’est pour leur bien et pour la sécurité de tous. Ne t’inquiète pas, tes compagnons peuvent rester en bas, dans l’enceinte du Phare, à condition d’être accompagnés d'un humain bien sûr. "
     },
     {
+        "key": "parking",
+        "value": "🅿️ Il n’y a pas de grand parking au pied du phare. Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement. Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation et les habitants."
+    },
+    {
         "key": "blockhouse",
         "value": "Le blockhaus abrite une exposition gratuite 'Moments Phare', retraçant la vie des gardiens de phare."
     }
