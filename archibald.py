@@ -164,15 +164,15 @@ def create_prompt(user_message_translated, extracted_info, lang):
     if is_pet:
         response_parts.append("🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite.")
     if is_parking:
-    response_parts.append(
-        "🅿️ Il n’y a pas de grand parking au pied du phare. "
-        "Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
-        "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
-    )
+        response_parts.append(
+            "🅿️ Il n’y a pas de grand parking au pied du phare. "
+            "Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
+            "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
+         )
     if not (is_schedule or is_price or is_pet):
         response_parts.append("Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
                 "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
-
+                             )
     final_response = " ".join(response_parts)
 
     prompt = f"""
