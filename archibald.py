@@ -136,14 +136,12 @@ def extract_info(user_message):
         is_schedule = any(word in user_message for word in ["horaire", "ouvert", "fermé", "heures", "temps", "jours"])
         is_price = any(word in user_message for word in ["tarif", "prix", "combien", "coût", "entrée"])
         is_pet = any(word in user_message for word in ["chien", "chat", "oiseau", "animaux", "animal", "perroquet", "hamster", "lapin"])
-        is_parking = any(word in user_message for word in ["parking", "garer", "stationnement", "se garer", "place de parking", "poser la voiture", "stationner"])
         date = parse_relative_date(user_message) if is_schedule else None
         return {
             "date": date.isoformat() if date else None,
             "is_schedule": is_schedule,
             "is_price": is_price,
-            "is_pet": is_pet,
-            "is_parking": is_parking
+            "is_pet": is_pet
         }
     except Exception as e:
         print(f"Erreur lors de l'extraction des informations: {e}")
@@ -153,7 +151,6 @@ def create_prompt(user_message_translated, extracted_info, lang):
     is_schedule = extracted_info.get("is_schedule", False)
     is_price = extracted_info.get("is_price", False)
     is_pet = extracted_info.get("is_pet", False)
-    is_parking = extracted_info.get("is_parking", False)
 
     response_parts = []
 
@@ -163,17 +160,9 @@ def create_prompt(user_message_translated, extracted_info, lang):
         response_parts.append("🎟️ Le tarif d’entrée est de **7€ pour les adultes** et **4€ pour les enfants**.\n📌 Consultez tous les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/).")
     if is_pet:
         response_parts.append("🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite.")
-    if is_parking:
-        response_parts.append(
-            "🅿️ Il n’y a pas de grand parking au pied du phare. "
-            "Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
-            "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
-         )
-    if not (is_schedule or is_price or is_pet or is_parking):
-        response_parts.append(
-            "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
-            "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
-        )
+
+    if not (is_schedule or is_price or is_pet):
+        response_parts.append("Ahoy, cher visiteur ! 🌊 Consultez les horaires et tarifs ici : [Infos du phare](https://phareducapferret.com/horaires-et-tarifs/).")
 
     final_response = " ".join(response_parts)
 
