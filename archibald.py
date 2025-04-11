@@ -126,10 +126,10 @@ def detect_language(user_message):
             temperature=0
         )
         lang = response["choices"][0]["message"]["content"].strip().lower()
-        return lang if lang in ["fr", "en", "es", "de", "it"] else "fr"
+        return lang if lang in ["fr", "en", "es", "de", "it","pt","nl"] else "en"
     except Exception as e:
         print(f"Erreur de détection de langue: {e}")
-        return "fr"
+        return "en"
 
 def extract_info(user_message):
     try:
