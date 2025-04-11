@@ -172,11 +172,20 @@ def create_prompt(user_message_translated, extracted_info, lang):
             "Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
             "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
          )
-    if not (is_schedule or is_price or is_pet or is_parking):
+    # Recherche d'une réponse dans la base de connaissances
+    search_results = []
+    for item in knowledge_base["faq"] + knowledge_base["questions_and_responses"]:
+        if user_message_translated.lower() in item["question"].lower():
+            search_results.append(item["answer"] if "answer" in item else item["response"])
+
+    if search_results:
+        response_parts.append(search_results[0])
+    else:
         response_parts.append(
             "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
             "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
         )
+
 
     final_response = " ".join(response_parts)
 
