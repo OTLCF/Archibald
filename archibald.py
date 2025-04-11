@@ -134,10 +134,12 @@ def detect_language(user_message):
 def extract_info(user_message):
     try:
         user_message = user_message.lower()
-        is_schedule = any(word in user_message for word in ["horaire", "ouvert", "fermé", "heures", "temps", "jours"])
-        is_price = any(word in user_message for word in ["tarif", "prix", "combien", "coût", "entrée"])
-        is_pet = any(word in user_message for word in ["chien", "chat", "oiseau", "animaux", "animal", "perroquet", "hamster", "lapin"])
-        is_parking = any(word in user_message for word in ["parking", "garer", "stationnement", "se garer", "place de parking", "poser la voiture", "stationner"])
+        is_schedule = any(word in user_message for word in ["horaire", "ouvert", "fermé", "heures", "temps", "jours","Zeitplan", "geöffnet", "geschlossen", "Stunden", "Zeit", "Tage","schedule", "open", "closed", "hours", "time", "days","horario", "abierto", "cerrado", "horas", "tiempo", "días","horário", "aberto", "fechado", "horas", "tempo", "dias",
+"schema", "open", "gesloten", "uren", "tijd", "dagen"])
+        is_price = any(word in user_message for word in ["tarif", "prix", "combien", "coût", "entrée","tarief", "prijs", "hoeveel", "kosten", "toegang","Fahrpreis", "Preis", "Wie viel", "Kosten", "Eintritt","tarifa", "precio", "cuánto", "costo", "entrada","tarifa", "preço", "quanto", "custo", "entrada",
+"fare", "price", "how much", "cost", "entrance"])
+        is_pet = any(word in user_message for word in ["chien", "chat", "oiseau", "animaux", "animal", "perroquet", "hamster", "lapin", "dog", "cat", "bird", "animals", "parrot", "rabbit", "Hund", "Katze", "Vogel", "Tiere", "Tier", "Papagei", "Kaninchen","perro", "gato", "pájaro", "animales", "loro", "hámster", "conejo","cachorro", "gato", "pássaro", "animais", "papagaio", "hamster", "coelho", "hond", "kat", "vogel", "dieren", "dier", "papegaai", "konijn"])
+        is_parking = any(word in user_message for word in ["parking", "garer", "stationnement", "se garer", "place de parking", "poser la voiture", "stationner","parkeerplaats", "parkeer de auto", "parkeren","Parkplatz", "Auto parken", "Park","Parken","aparcamiento", "estacionamiento", "estacionar", "plaza de aparcamiento", "estacionar el coche", "estacionar","parking space", "park the car", "park"])
         date = parse_relative_date(user_message) if is_schedule else None
         return {
             "date": date.isoformat() if date else None,
