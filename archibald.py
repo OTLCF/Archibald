@@ -196,24 +196,33 @@ def debug_knowledge():
 @app.route("/chat", methods=["POST"])
 @cross_origin(origins=["https://phareducapferret.com"], supports_credentials=True)
 def chat():
+    print("📨 Requête POST reçue sur /chat")  # Ajout du log
+
     user_message = request.json.get("message")
     if not user_message:
+        print("⚠️ Aucun message trouvé dans la requête.")
         return jsonify({"error": "No message provided"}), 400
 
+    print(f"📩 Message utilisateur : {user_message}")  # Log du contenu du message
+
     lang = detect_language(user_message)
+    print(f"🌍 Langue détectée : {lang}")
 
     if lang != "fr":
         try:
             translator_to_french = Translator(to_lang="fr")
             user_message_translated = translator_to_french.translate(user_message)
         except Exception as e:
-            print(f"Error during translation: {e}")
+            print(f"❌ Erreur de traduction : {e}")
             return jsonify({"error": "An error occurred while translating the message."}), 500
     else:
         user_message_translated = user_message
 
     extracted_info = extract_info(user_message_translated)
+    print(f"🧠 Infos extraites : {extracted_info}")
+
     prompt = create_prompt(user_message_translated, extracted_info, lang=lang)
+    print("🛠️ Prompt généré, appel à OpenAI...")
 
     try:
         response = openai.ChatCompletion.create(
@@ -226,6 +235,8 @@ def chat():
             temperature=0.7,
         )
         chat_response = response["choices"][0]["message"]["content"].strip()
+        print(f"✅ Réponse générée : {chat_response[:100]}...")  # Log partiel pour éviter un énorme bloc
+
         if lang != "fr":
             translator_to_user_lang = Translator(to_lang=lang)
             chat_response_translated = translator_to_user_lang.translate(chat_response)
@@ -233,7 +244,7 @@ def chat():
         else:
             return jsonify({"response": chat_response})
     except Exception as e:
-        print(f"Error during OpenAI call: {e}")
+        print(f"❌ Erreur lors de l’appel à OpenAI : {e}")
         return jsonify({"error": "An error occurred while processing your request."}), 500
 
 if __name__ == "__main__":
