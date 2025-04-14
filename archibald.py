@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import difflib 
 from dotenv import load_dotenv
 from dateutil.parser import parse
 from datetime import datetime, timedelta
@@ -152,7 +153,7 @@ def extract_info(user_message):
         print(f"Erreur lors de l'extraction des informations: {e}")
         return {}
 
-def create_prompt(user_message_translated, extracted_info, lang):
+def create_prompt(user_message_translated, extracted_info, lang, knowledge_base):
     is_schedule = extracted_info.get("is_schedule", False)
     is_price = extracted_info.get("is_price", False)
     is_pet = extracted_info.get("is_pet", False)
@@ -161,31 +162,45 @@ def create_prompt(user_message_translated, extracted_info, lang):
     response_parts = []
 
     if is_schedule:
-        response_parts.append("📌 Les horaires du phare peuvent varier selon la saison. Consultez-les ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/).")
+        response_parts.append(
+            "📌 Les horaires du phare peuvent varier selon la saison. Consultez-les ici : "
+            "[🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
+        )
     if is_price:
-        response_parts.append("🎟️ Le tarif d’entrée est de **7€ pour les adultes** et **4€ pour les enfants**.\n📌 Consultez tous les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/).")
+        response_parts.append(
+            "🎟️ Le tarif d’entrée est de **7€ pour les adultes** et **4€ pour les enfants**.\n"
+            "📌 Consultez tous les détails ici : [🕒 Voir les horaires et tarifs](https://phareducapferret.com/horaires-et-tarifs/)."
+        )
     if is_pet:
-        response_parts.append("🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite.")
+        response_parts.append(
+            "🐾 **Les animaux de compagnie sont autorisés dans le parc et la boutique**, mais **interdits dans la tour et le blockhaus**.\n"
+            "📌 Ils doivent rester sous surveillance humaine au pied du phare pendant la visite."
+        )
     if is_parking:
         response_parts.append(
-            "🅿️ Il n’y a pas de grand parking au pied du phare. "
-            "Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
+            "🅿️ Il n’y a pas de grand parking au pied du phare. Quelques places sont disponibles à proximité, mais elles sont souvent prises rapidement.\n"
             "📌 Le stationnement est gratuit dans le Cap Ferret, sur le bas-côté, tant que vous ne gênez pas la circulation."
-         )
-    # Recherche d'une réponse dans la base de connaissances
-    search_results = []
-    for item in knowledge_base["faq"] + knowledge_base["questions_and_responses"]:
-        if user_message_translated.lower() in item["question"].lower():
-            search_results.append(item["answer"] if "answer" in item else item["response"])
-
-    if search_results:
-        response_parts.append(search_results[0])
-    else:
-        response_parts.append(
-            "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
-            "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
         )
 
+    if not (is_schedule or is_price or is_pet or is_parking):
+        print("🔎 Aucune catégorie détectée, recherche dans la base...")
+        all_qna = knowledge_base["faq"] + knowledge_base["questions_and_responses"]
+        questions = [item["question"] for item in all_qna]
+        match = difflib.get_close_matches(user_message_translated, questions, n=1, cutoff=0.45)
+
+        if match:
+            matched_question = match[0]
+            for item in all_qna:
+                if item["question"] == matched_question:
+                    answer = item.get("answer") or item.get("response", "")
+                    response_parts.append(answer)
+                    print(f"📚 Réponse issue de la base : {matched_question} → {answer[:80]}...")
+                    break
+        else:
+            response_parts.append(
+                "Ahoy, cher visiteur ! 🌊 Je n’ai pas trouvé l’info exacte, mais vous pouvez consulter les "
+                "[Infos du phare](https://phareducapferret.com/horaires-et-tarifs/)."
+            )
 
     final_response = " ".join(response_parts)
 
@@ -232,7 +247,7 @@ def chat():
     extracted_info = extract_info(user_message_translated)
     print(f"🧠 Infos extraites : {extracted_info}")
 
-    prompt = create_prompt(user_message_translated, extracted_info, lang=lang)
+    prompt = create_prompt(user_message_translated, extracted_info, lang=lang, knowledge_base=knowledge_base)
     print("🛠️ Prompt généré, appel à OpenAI...")
 
     try:
