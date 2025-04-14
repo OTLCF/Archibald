@@ -4,16 +4,12 @@ import re
 import difflib 
 from dotenv import load_dotenv
 from dateutil.parser import parse
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS, cross_origin
 from langdetect import detect
 from translate import Translator
 import openai
-from collections import defaultdict
-
-# Limiteur simple : 5 requêtes/jour par IP
-user_requests = defaultdict(lambda: {"count": 0, "last_seen": date.today()})
 
 # Configuration OpenAI
 load_dotenv()
@@ -226,32 +222,15 @@ def debug_knowledge():
 @app.route("/chat", methods=["POST"])
 @cross_origin(origins=["https://phareducapferret.com"], supports_credentials=True)
 def chat():
-    print("📨 Requête POST reçue sur /chat")
-
-    user_ip = request.remote_addr
-    today = datetime.today().date()
-
-    # Réinitialisation quotidienne du compteur
-    if user_requests[user_ip]["last_seen"] != today:
-        user_requests[user_ip] = {"count": 0, "last_seen": today}
-
-    # Vérification de la limite
-    if user_requests[user_ip]["count"] >= 5:
-        print(f"🚫 Limite atteinte pour {user_ip}")
-        return jsonify({
-            "error": "Limite de requêtes atteinte pour aujourd'hui.",
-            "message": "🛑 Ahoy, moussaillon ! Tu as atteint la limite de 5 messages aujourd’hui. Reviens demain, le Phare sera toujours là pour t’éclairer ! 🌊"
-        }), 429
-
-    # On incrémente le compteur
-    user_requests[user_ip]["count"] += 1
+    print("📨 Requête POST reçue sur /chat")  # Ajout du log
 
     user_message = request.json.get("message")
     if not user_message:
         print("⚠️ Aucun message trouvé dans la requête.")
         return jsonify({"error": "No message provided"}), 400
 
-    print(f"📩 Message utilisateur : {user_message}")
+    print(f"📩 Message utilisateur : {user_message}")  # Log du contenu du message
+
     lang = detect_language(user_message)
     print(f"🌍 Langue détectée : {lang}")
 
@@ -268,7 +247,7 @@ def chat():
     extracted_info = extract_info(user_message_translated)
     print(f"🧠 Infos extraites : {extracted_info}")
 
-    prompt = create_prompt(user_message_translated, extracted_info, lang=lang)
+    prompt = create_prompt(user_message_translated, extracted_info, lang=lang, knowledge_base=knowledge_base)
     print("🛠️ Prompt généré, appel à OpenAI...")
 
     try:
@@ -282,7 +261,7 @@ def chat():
             temperature=0.7,
         )
         chat_response = response["choices"][0]["message"]["content"].strip()
-        print(f"✅ Réponse générée : {chat_response[:100]}...")
+        print(f"✅ Réponse générée : {chat_response[:100]}...")  # Log partiel pour éviter un énorme bloc
 
         if lang != "fr":
             translator_to_user_lang = Translator(to_lang=lang)
@@ -290,7 +269,6 @@ def chat():
             return jsonify({"response": chat_response_translated})
         else:
             return jsonify({"response": chat_response})
-
     except Exception as e:
         print(f"❌ Erreur lors de l’appel à OpenAI : {e}")
         return jsonify({"error": "An error occurred while processing your request."}), 500
