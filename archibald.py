@@ -18,7 +18,7 @@ openai.api_key = secret_key
 
 # Flask setup
 app = Flask(__name__)
-CORS(app, origins=["https://phareducapferret.com"], supports_credentials=True)
+CORS(app, origins=["https://phareducapferret.com","https//preprod.phareducapferret.com","https://phareducap.agence-raid.fr"], supports_credentials=True)
 app.secret_key = "archi33950baldBOT"
 
 def preprocess_knowledge(raw_knowledge):
