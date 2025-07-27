@@ -18,7 +18,7 @@ openai.api_key = secret_key
 
 # Flask setup
 app = Flask(__name__)
-CORS(app, origins=["https://phareducapferret.com","https://preprod.phareducapferret.com","https://phareducap.agence-raid.fr"], supports_credentials=True)
+CORS(app, origins=["https://phareducapferret.com","https://preprod.phareducapferret.com","https://phareducap.agence-raid.fr","https://phareducapferret.ar"], supports_credentials=True)
 app.secret_key = "archi33950baldBOT"
 
 def preprocess_knowledge(raw_knowledge):
@@ -220,7 +220,7 @@ def debug_knowledge():
     return jsonify(knowledge_base)
 
 @app.route("/chat", methods=["POST"])
-@cross_origin(origins=["https://phareducapferret.com"], supports_credentials=True)
+@cross_origin(origins=origins, supports_credentials=True)
 def chat():
     print("📨 Requête POST reçue sur /chat")  # Ajout du log
 
