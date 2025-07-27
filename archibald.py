@@ -220,7 +220,7 @@ def debug_knowledge():
     return jsonify(knowledge_base)
 
 @app.route("/chat", methods=["POST"])
-@cross_origin(origins=origins, supports_credentials=True)
+@cross_origin(origins=["https://phareducapferret.com","https://preprod.phareducapferret.com","https://phareducap.agence-raid.fr","https://phareducapferret.ar"], supports_credentials=True)
 def chat():
     print("📨 Requête POST reçue sur /chat")  # Ajout du log
 
