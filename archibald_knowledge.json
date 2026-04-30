@@ -3,8 +3,8 @@
     {
       "type": "regular",
       "name": "Vacances de Noël",
-      "start_date": "2024-12-21",
-      "end_date": "2025-01-05",
+      "start_date": "2026-12-19",
+      "end_date": "2027-01-03",
       "hours": "14h à 17h",
       "last_entry": "16h30",
       "days_open": ["mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -27,8 +27,8 @@
     {
       "type": "regular",
       "name": "Hors saison janvier",
-      "start_date": "2025-01-06",
-      "end_date": "2025-01-31",
+      "start_date": "2027-01-04",
+      "end_date": "2027-01-31",
       "hours": "14h à 17h",
       "last_entry": "16h30",
       "days_open": ["vendredi", "samedi", "dimanche"]
@@ -36,8 +36,8 @@
     {
       "type": "regular",
       "name": "Hiver",
-      "start_date": "2025-02-01",
-      "end_date": "2025-03-31",
+      "start_date": "2027-02-01",
+      "end_date": "2027-03-31",
       "hours": "14h à 17h",
       "last_entry": "16h30",
       "days_open": ["mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -45,8 +45,8 @@
     {
       "type": "regular",
       "name": "Printemps",
-      "start_date": "2025-04-01",
-      "end_date": "2025-06-30",
+      "start_date": "2026-04-01",
+      "end_date": "2026-06-30",
       "hours": "10h à 12h30 et de 14h à 18h30",
       "last_entry": "12h et 18h",
       "days_open": ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -54,8 +54,8 @@
     {
       "type": "regular",
       "name": "Été",
-      "start_date": "2025-07-01",
-      "end_date": "2025-08-31",
+      "start_date": "2026-07-01",
+      "end_date": "2026-08-31",
       "hours": "10h à 19h30",
       "last_entry": "19h",
       "days_open": ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -200,7 +200,7 @@
   },
   {
       "question": "Y a-t-il des événements spéciaux au Phare ?",
-      "response": "Ah, des événements spéciaux, ça c’est un rêve de vieux marin ! Pas encore, mais c’est un projet que j’ai dans la tête depuis des années. Imaginez le Phare illuminé dans la nuit, des visiteurs venus écouter des récits de tempêtes et de marins sous les étoiles... La lanterne qui brille comme une étoile terrestre, et moi, vous racontant des légendes marines. Un jour, ça viendra, vous verrez. Mais en attendant, laissez votre imagination voguer : le Phare a bien des secrets à partager."
+      "response": "Imaginez le Phare illuminé dans la nuit, des visiteurs venus écouter des récits de tempêtes et de marins sous les étoiles... La lanterne qui brille comme une étoile terrestre, et moi, vous racontant des légendes marines. C'est possible, l'été, une fois par semaine pour 15 chanceux ! Le Phare a bien des secrets à partager."
   },
   {
       "question": "Pourquoi ne proposez-vous pas de visites guidées ?",
@@ -220,19 +220,15 @@
   },
   {
       "question": "Quand sera fermé le Phare du Cap Ferret ?",
-      "response": "Le Phare sera fermé du 4 novembre 2024 au 20 décembre 2024, le temps de se refaire une beauté pour l’hiver."
+      "response": "Le Phare sera fermé du 02 novembre 2026 au 18 décembre 2026 inclus, le temps de se refaire une beauté pour l’hiver."
   },
   {
       "question": "Quand le Phare rouvrira-t-il ses portes ?",
-      "response": "Le Phare rouvrira ses portes dès le 21 décembre 2024 pour les vacances de Noël."
+      "response": "Le Phare rouvrira ses portes dès le 18 décembre 2026 pour les vacances de Noël."
   },
   {
       "question": "Quels sont les horaires du Phare pendant les vacances de Noël ?",
       "response": "Du 21 décembre 2024 au 5 janvier 2025, le Phare sera ouvert du mercredi au dimanche, de 14h à 17h, avec la dernière visite à 16h30."
-  },
-  {
-      "question": "Le Phare sera-t-il ouvert les 23 et 24 décembre 2024 ?",
-      "response": "Oui, le Phare sera ouvert exceptionnellement le lundi 23 et le mardi 24 décembre 2024, de 14h à 17h, avec la dernière visite à 16h30."
   },
   {
       "question": "Quels sont les horaires du Phare en hors-saison ?",
@@ -356,7 +352,7 @@
   },
   {
       "question": "Is there a place to visit when it's bad weather?",
-      "response": "Yes! The blockhouse, which has an intriguing history, is open for visits, even when the weather is stormy. It houses a free exhibition called 'Moments Phare,' which gives you insight into the lighthouse’s past and the people who took care of it. There’s also a unique sound experience outside, where you can listen to the voices of past lighthouse keepers and artisans."
+      "response": "Yes! The blockhaus, which has an intriguing history, is open for visits, even when the weather is stormy. It houses a free exhibition called 'Moments Phare,' which gives you insight into the lighthouse’s past and the people who took care of it. There’s also a unique sound experience outside, where you can listen to the voices of past lighthouse keepers and artisans."
   },
   {
       "question": "What happens if there's a storm or bad weather?",
@@ -364,7 +360,7 @@
   },
   {
       "question": "Are there any special events at the lighthouse?",
-      "response": "We’re working on hosting special events, including night visits and themed nights like the Night of the Museums. Just imagine: the lighthouse lit up in the silence of the night, guiding visitors with stories of storms, sailors, and distant lands. While this dream isn't yet a reality, we promise it’s in the works!"
+      "response": "Just imagine: the lighthouse lit up in the silence of the night, guiding visitors with stories of storms, sailors, and distant lands. It is now possible, every summer, once a week for 15 lucky friends !"
   },
   {
       "question": "Are guided tours available?",
@@ -404,7 +400,7 @@
   },
   {
       "question": "Organisez-vous des événements spécifiques (nuit des musées, visites nocturnes) ?",
-      "response": "Ah, oui ! Il y a une petite boutique où vous pouvez acheter des souvenirs du Phare, des cartes postales et des trésors marins. Mais pour manger, vous devrez aller un peu plus loin. Il n’y a pas de restauration dans le Phare lui-même, mais le parc alentour est un endroit idéal pour un pique-nique. L’air marin, une bonne tartine, et vous êtes prêts pour l’aventure."
+      "response": "Et oui l'ami ! Chaque été, une fois par semaine, notre beau Phare ouvre ses portes en soirée à 15 chanceux marins. Ils pourront admirer le coucher du soleil au sommet et écouter les histoires de ce colosse."
   },
   {
       "question": "Les premiers dimanches de chaque mois, la visite est-elle gratuite ?",
